@@ -57,6 +57,17 @@ class IRBlock extends TIRBlock {
     result = firstInstr.getUniqueId()
   }
   
+  /**
+   * Gets the zero-based index of the block within its function. This is used
+   * by debugging and printing code only.
+   */
+  int getDisplayIndex() {
+    this = rank[result + 1](IRBlock funcBlock |
+      funcBlock.getFunction() = getFunction() |
+      funcBlock order by funcBlock.getUniqueId()
+    )
+  }
+
   final cached Instruction getInstruction(int index) {
     index = 0 and result = firstInstr or
     (
