@@ -515,6 +515,10 @@ class InitializeParameterInstruction extends VariableInstruction {
   final Parameter getParameter() {
     result = var.(IRUserVariable).getVariable()
   }
+
+  override final MemoryAccessKind getResultMemoryAccess() {
+    result instanceof IndirectMemoryAccess
+  }
 }
 
 class FieldAddressInstruction extends FieldInstruction {
@@ -530,6 +534,10 @@ class FieldAddressInstruction extends FieldInstruction {
 class UninitializedInstruction extends Instruction {
   UninitializedInstruction() {
     opcode instanceof Opcode::Uninitialized
+  }
+
+  override final MemoryAccessKind getResultMemoryAccess() {
+    result instanceof IndirectMemoryAccess
   }
 }
 
