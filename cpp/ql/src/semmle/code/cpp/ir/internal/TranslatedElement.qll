@@ -52,7 +52,7 @@ private Element getRealParent(Expr expr) {
  * not ignore an expression solely because it is a descendant of an ignored
  * element.
  */
-private predicate ignoreExprLocal(Expr expr) {
+predicate ignoreExprLocal(Expr expr) {
   // Ignore parentless expressions
   not exists(getRealParent(expr)) or
   // Ignore the constants in SwitchCase, since their values are embedded in the
@@ -71,7 +71,7 @@ private predicate ignoreExprLocal(Expr expr) {
 /**
  * Holds if `expr` should be ignored for the purposes of IR generation.
  */
-private predicate ignoreExpr(Expr expr) {
+predicate ignoreExpr(Expr expr) {
   ignoreExprLocal(expr) or
   // Ignore all descendants of ignored elements as well.
   ignoreElement(getRealParent(expr))
@@ -80,7 +80,7 @@ private predicate ignoreExpr(Expr expr) {
 /**
  * Holds if `element` should be ignored for the purposes of IR generation.
  */
-private predicate ignoreElement(Element element) {
+predicate ignoreElement(Element element) {
   ignoreExpr(element.(Expr))
 }
 
@@ -89,7 +89,8 @@ private predicate ignoreElement(Element element) {
  * a value.
  */
 private predicate isNativeCondition(Expr expr) {
-  expr instanceof BinaryLogicalOperation
+  expr instanceof BinaryLogicalOperation and
+  not expr.isConstant()
 }
 
 /**
@@ -101,7 +102,8 @@ private predicate isFlexibleCondition(Expr expr) {
     expr instanceof ParenthesisExpr or
     expr instanceof NotExpr
   ) and
-  usedAsCondition(expr)
+  usedAsCondition(expr) and
+  not expr.isConstant()
 }
 
 /**

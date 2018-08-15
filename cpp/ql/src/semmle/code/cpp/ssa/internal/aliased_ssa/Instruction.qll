@@ -66,6 +66,31 @@ module InstructionSanity {
     count(instr.getOperand(tag)) > 1 and
     not tag instanceof UnmodeledUseOperand
   }
+
+  /**
+   * Holds if `Phi` instruction `instr` has fewer than two operands.
+   */
+  query predicate missingPhiOperand(PhiInstruction instr, int predIndex, Location predLoc) {
+    exists(IRBlock pred |
+      pred = instr.getBlock().getAPredecessor() and
+      predLoc = pred.getLocation() and
+      predIndex = pred.getDisplayIndex() and
+      not exists(PhiOperand operand |
+        exists(instr.getOperand(operand)) and
+        operand.getPredecessorBlock() = pred
+      )
+    )
+  }
+
+  /**
+   * Holds if an instruction, other than `ExitFunction`, has no successors.
+   */
+  query predicate instructionWithoutSuccessor(Instruction instr) {
+    not exists(instr.getASuccessor()) and
+    not instr instanceof ExitFunctionInstruction and
+    // Phi instructions aren't linked into the instruction-level flow graph.
+    not instr instanceof PhiInstruction
+  }
 }
 
 /**

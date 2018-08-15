@@ -1,3 +1,5 @@
 missingOperand
 unexpectedOperand
 duplicateOperand
+missingPhiOperands
+instructionWithoutSuccessor
