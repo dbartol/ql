@@ -977,3 +977,9 @@ void OperatorDeleteArray() {
 #endif
 
 // semmle-extractor-options: -std=c++17
+
+int missingReturn(bool b) {
+  if (b) {
+    return 0;
+  }
+}
