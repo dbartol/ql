@@ -1,6 +1,7 @@
-import semmle.code.cpp.ir.implementation.raw.Instruction
+private import IRBlockConstructionInternal
 import cpp
 import semmle.code.cpp.ir.implementation.EdgeKind
+private import IR
 
 private predicate startsBasicBlock(Instruction instr) {
   not instr instanceof PhiInstruction and
