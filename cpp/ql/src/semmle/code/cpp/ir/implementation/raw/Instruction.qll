@@ -45,11 +45,17 @@ module InstructionSanity {
   /**
    * Holds if instruction `instr` is missing an expected operand with tag `tag`.
    */
-  query predicate missingOperand(Instruction instr, OperandTag tag) {
-    expectsOperand(instr, tag) and
-    not exists(NonPhiOperand operand |
-      operand = instr.getAnOperand() and
-      operand.getOperandTag() = tag
+  query predicate missingOperand(Instruction instr, string message, Function func, string funcName) {
+    exists(OperandTag tag |
+      expectsOperand(instr, tag) and
+      not exists(NonPhiOperand operand |
+        operand = instr.getAnOperand() and
+        operand.getOperandTag() = tag
+      ) and
+      message = "Instruction '" + instr.getOpcode().toString() + "' is missing operand with tag '" +
+        tag.toString() + "' in function '$@'." and
+      func = instr.getFunction() and
+      funcName = instr.getFunction().getFullSignature()
     )
   }
 
