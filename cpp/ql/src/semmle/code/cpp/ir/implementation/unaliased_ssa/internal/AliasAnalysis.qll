@@ -2,8 +2,22 @@ private import AliasAnalysisInternal
 import cpp
 private import InputIR
 private import semmle.code.cpp.ir.internal.IntegerConstant as Ints
+private import semmle.code.cpp.models.interfaces.Alias
 
 private class IntValue = Ints::IntValue;
+
+/**
+ * Gets the `Function` called by the specified hold. Only holds if the target is known and unique.
+ * For virtual and indirect calls, this will not hold.
+ */
+private Function getUniqueCallTarget(CallInstruction call) {
+  // We could do better here with some virtual dispatch analysis.
+  result = call.getCallTarget().(FunctionAddressInstruction).getFunction()
+}
+
+query predicate target(CallInstruction call, Function f) {
+  f = getUniqueCallTarget(call)
+}
 
 /**
  * Converts the bit count in `bits` to a byte count and a bit count in the form
@@ -59,6 +73,25 @@ predicate operandIsConsumedWithoutEscaping(Operand operand) {
       instr instanceof PointerDiffInstruction or
       // Converting an address to a `bool` does not escape the address.
       instr.(ConvertInstruction).getResultType() instanceof BoolType
+    )
+  ) or
+  exists(CallInstruction call, PositionalArgumentOperand argOperand,
+      AliasModel::ParameterEscape escape, Function func |
+    argOperand = operand and
+    argOperand.getInstruction() = call and
+    func = getUniqueCallTarget(call) and
+    escape = AliasModel::getParameterEscapeBehavior(func, argOperand.getIndex()) and
+    (
+      // The operand doesn't escape at all
+      escape instanceof AliasModel::DoesNotEscape or
+      (
+        // The operand only escapes via the return value, and we'll be tracking the potential escape
+        // of the returned value. Because we only track pointers that point to a single known
+        // variable, we have to treat any parameter that escapes via the return value but isn't
+        // always returned as escaping.
+        escape instanceof AliasModel::EscapesOnlyViaReturn and
+        AliasModel::parameterIsAlwaysReturned(func, argOperand.getIndex())
+      )
     )
   )
 }
@@ -134,7 +167,13 @@ predicate operandIsPropagated(Operand operand, IntValue bitOffset) {
       // offset of the field.
       bitOffset = getFieldBitOffset(instr.(FieldAddressInstruction).getField()) or
       // A copy propagates the source value.
-      operand instanceof CopySourceOperand and bitOffset = 0
+      operand instanceof CopySourceOperand and bitOffset = 0 or
+      exists(Function func, int paramIndex |
+        func = getUniqueCallTarget(instr.(CallInstruction)) and
+        paramIndex = operand.(PositionalArgumentOperand).getIndex() and
+        AliasModel::parameterIsAlwaysReturned(func, paramIndex) and
+        bitOffset = 0
+      )
     )
   )
 }

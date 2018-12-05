@@ -1,36 +1,40 @@
-| test.cpp:7:8:7:9 | Load: t1 | test.cpp:6:12:6:17 | Call: call to source |
-| test.cpp:9:8:9:9 | Load: t1 | test.cpp:6:12:6:17 | Call: call to source |
-| test.cpp:10:8:10:9 | Load: t2 | test.cpp:6:12:6:17 | Call: call to source |
-| test.cpp:15:8:15:9 | Load: t2 | test.cpp:6:12:6:17 | Call: call to source |
-| test.cpp:21:8:21:9 | Load: t1 | test.cpp:6:12:6:17 | Call: call to source |
-| test.cpp:26:8:26:9 | Load: t1 | test.cpp:6:12:6:17 | Call: call to source |
-| test.cpp:30:8:30:8 | Load: t | test.cpp:35:10:35:15 | Call: call to source |
-| test.cpp:31:8:31:8 | Load: c | test.cpp:36:13:36:18 | Call: call to source |
-| test.cpp:58:10:58:10 | Load: t | test.cpp:50:14:50:19 | Call: call to source |
-| test.cpp:76:8:76:9 | Load: u1 | test.cpp:75:7:75:8 | Uninitialized: definition of u1 |
-| test.cpp:84:8:84:18 | Load: ... ? ... : ... | test.cpp:83:7:83:8 | Uninitialized: definition of u2 |
-| test.cpp:86:8:86:9 | Load: i1 | test.cpp:83:7:83:8 | Uninitialized: definition of u2 |
-| test.cpp:90:8:90:14 | Load: source1 | test.cpp:89:28:89:34 | InitializeParameter: source1 |
-| test.cpp:92:8:92:14 | Load: source1 | test.cpp:89:28:89:34 | InitializeParameter: source1 |
-| test.cpp:132:22:132:23 | Load: m1 | test.cpp:122:18:122:30 | InitializeParameter: sourceStruct1 |
-| test.cpp:140:22:140:23 | Load: m1 | test.cpp:122:18:122:30 | InitializeParameter: sourceStruct1 |
-| test.cpp:188:8:188:8 | Load: y | test.cpp:186:27:186:32 | Call: call to source |
-| test.cpp:192:8:192:8 | Load: s | test.cpp:199:33:199:38 | Call: call to source |
-| test.cpp:200:8:200:8 | Load: y | test.cpp:199:33:199:38 | Call: call to source |
-| test.cpp:205:8:205:8 | Load: x | test.cpp:212:34:212:39 | Call: call to source |
-| test.cpp:213:8:213:8 | Load: y | test.cpp:212:34:212:39 | Call: call to source |
-| test.cpp:226:8:226:8 | Load: y | test.cpp:219:11:219:16 | Call: call to source |
-| test.cpp:308:12:308:12 | Load: x | test.cpp:293:14:293:19 | Call: call to source |
-| test.cpp:314:12:314:12 | Load: x | test.cpp:313:22:313:27 | Call: call to source |
-| test.cpp:337:14:337:14 | Load: x | test.cpp:353:17:353:22 | Call: call to source |
-| test.cpp:366:7:366:7 | Load: x | test.cpp:362:4:362:9 | Call: call to source |
-| true_upon_entry.cpp:13:8:13:8 | Load: x | true_upon_entry.cpp:9:11:9:16 | Call: call to source |
-| true_upon_entry.cpp:21:8:21:8 | Load: x | true_upon_entry.cpp:17:11:17:16 | Call: call to source |
-| true_upon_entry.cpp:29:8:29:8 | Load: x | true_upon_entry.cpp:27:9:27:14 | Call: call to source |
-| true_upon_entry.cpp:39:8:39:8 | Load: x | true_upon_entry.cpp:33:11:33:16 | Call: call to source |
-| true_upon_entry.cpp:49:8:49:8 | Load: x | true_upon_entry.cpp:43:11:43:16 | Call: call to source |
-| true_upon_entry.cpp:57:8:57:8 | Load: x | true_upon_entry.cpp:54:11:54:16 | Call: call to source |
-| true_upon_entry.cpp:66:8:66:8 | Load: x | true_upon_entry.cpp:62:11:62:16 | Call: call to source |
-| true_upon_entry.cpp:78:8:78:8 | Load: x | true_upon_entry.cpp:70:11:70:16 | Call: call to source |
-| true_upon_entry.cpp:86:8:86:8 | Load: x | true_upon_entry.cpp:83:11:83:16 | Call: call to source |
-| true_upon_entry.cpp:105:8:105:8 | Load: x | true_upon_entry.cpp:98:11:98:16 | Call: call to source |
+ERROR: 'result' cannot be used in this context (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:98,5-11)
+ERROR: Ambiguous predicate reference: could refer to a classless predicate or a predicate in Instruction. (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:229,8-17)
+ERROR: Ambiguous predicate reference: could refer to a classless predicate or a predicate in Instruction. (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:239,15-24)
+ERROR: Ambiguous predicate reference: could refer to a classless predicate or a predicate in Instruction. (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:382,8-17)
+ERROR: Annotation final can only be applied to classes, member predicates, and fields (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:73,3-8)
+ERROR: Annotation final can only be applied to classes, member predicates, and fields (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:96,3-8)
+ERROR: Could not resolve predicate getInstruction/0 (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:98,31-45)
+ERROR: Could not resolve type AddressOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:96,9-23)
+ERROR: Could not resolve type AddressOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:674,30-44)
+ERROR: Could not resolve type AddressOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:688,30-44)
+ERROR: Could not resolve type AddressOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1291,30-44)
+ERROR: Could not resolve type ArgumentOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1138,30-45)
+ERROR: Could not resolve type CallTargetOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1131,30-47)
+ERROR: Could not resolve type ChiPartialOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1477,30-47)
+ERROR: Could not resolve type ChiTotalOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1470,30-45)
+ERROR: Could not resolve type ConditionOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:698,30-46)
+ERROR: Could not resolve type ConditionOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1103,30-46)
+ERROR: Could not resolve type CopySourceOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:658,30-47)
+ERROR: Could not resolve type ExceptionOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1298,30-46)
+ERROR: Could not resolve type LeftOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:756,30-41)
+ERROR: Could not resolve type NonPhiOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:57,16-29)
+ERROR: Could not resolve type NonPhiOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:67,12-25)
+ERROR: Could not resolve type NonPhiOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:79,17-30)
+ERROR: Could not resolve type PhiOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:92,16-26)
+ERROR: Could not resolve type PositionalArgumentOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1152,12-37)
+ERROR: Could not resolve type ReturnValueOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:648,30-48)
+ERROR: Could not resolve type RightOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:760,30-42)
+ERROR: Could not resolve type ThisArgumentOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:1145,30-49)
+ERROR: Could not resolve type UnaryOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:603,30-42)
+ERROR: Could not resolve type UnaryOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:877,30-42)
+ERROR: Could not resolve type UnmodeledUseOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:455,31-50)
+ERROR: getDefinitionInstruction() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:122,13-37)
+ERROR: getDefinitionInstruction() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\dataflow\internal\DataFlowUtil.qll:130,42-66)
+ERROR: getDefinitionInstruction() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:410,12-36)
+ERROR: getDumpSortOrder() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:280,54-70)
+ERROR: getDumpString() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:280,15-28)
+ERROR: missing one of: '}' (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:41,5-29)
+ERROR: unexpected input 'result' expecting one of: 'and', 'implies', 'in', 'instanceof', 'or', '<', '<=', '=', '>', '>=', '-', '!=', '/', '}', '*', '%', '+' (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:36,5-11)
+ERROR: unexpected input 'result' expecting one of: 'and', 'implies', 'in', 'instanceof', 'or', '<', '<=', '=', '>', '>=', '-', '!=', '/', '}', '*', '%', '+' (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:49,5-11)
+ERROR: unexpected input '}' expecting one of: 'any', 'avg', 'boolean', 'count', 'date', 'exists', 'false', 'float', 'forall', 'forex', 'if', 'int', 'max', 'min', 'not', 'none', 'rank', 'result', 'strictcount', 'strictsum', 'strictconcat', 'concat', 'string', 'sum', 'super', 'this', 'true', '_', '-', '(', ')', '[', '+', Lowerid, Upperid, Atlowerid, Integer, Float, String (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Operand.qll:100,1-2)

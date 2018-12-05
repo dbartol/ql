@@ -1,0 +1,2793 @@
+#-----| __va_list_tag::operator=(__va_list_tag &&) -> __va_list_tag &
+#-----|   params: 
+#-----|     0: p#0
+#-----|         Type = __va_list_tag &&
+#-----| __va_list_tag::operator=(const __va_list_tag &) -> __va_list_tag &
+#-----|   params: 
+#-----|     0: p#0
+#-----|         Type = const __va_list_tag &
+example.c:
+#    7| getX(MyCoords *) -> int
+#    7|   params: 
+#    7|     0: coords
+#    7|         Type = MyCoords *
+#    8| doSomething(void *) -> void
+#    8|   params: 
+#    8|     0: something
+#    8|         Type = void *
+#   15| myTest_with_local_flow(MyBool *, int) -> void
+#   15|   params: 
+#   15|     0: b
+#   15|         Type = MyBool *
+#   15|     1: pos
+#   15|         Type = int
+#   16|   body: { ... }
+#   17|     0: declaration
+#   17|       0: definition of coords
+#   17|           Type = MyCoords
+#   17|         init: initializer for coords
+#   17|           expr: {...}
+#   17|               Type = struct <unnamed>
+#   17|               ValueCategory = prvalue
+#   17|             : 0
+#   17|                 Type = int
+#   17|                 Value = 0
+#   17|                 ValueCategory = prvalue
+#   19|     1: if (...) ... 
+#   19|       0: isTrue
+#   19|           Type = char
+#   19|           ValueCategory = prvalue(load)
+#   19|         -1: b
+#   19|             Type = MyBool *
+#   19|             ValueCategory = prvalue(load)
+#   19|       1: { ... }
+#   20|         0: goto ...
+#   23|     2: label ...:
+#   24|     3: ExprStmt
+#   24|       0: ... = ...
+#   24|           Type = int
+#   24|           ValueCategory = prvalue
+#   24|         0: x
+#   24|             Type = int
+#   24|             ValueCategory = lvalue
+#   24|           -1: coords
+#   24|               Type = MyCoords
+#   24|               ValueCategory = lvalue
+#   24|         1: ... = ...
+#   24|             Type = int
+#   24|             ValueCategory = prvalue
+#   24|           0: y
+#   24|               Type = int
+#   24|               ValueCategory = lvalue
+#   24|             -1: coords
+#   24|                 Type = MyCoords
+#   24|                 ValueCategory = lvalue
+#   24|           1: ... + ...
+#   24|               Type = int
+#   24|               ValueCategory = prvalue
+#   24|             0: pos
+#   24|                 Type = int
+#   24|                 ValueCategory = prvalue(load)
+#   24|             1: 1
+#   24|                 Type = int
+#   24|                 Value = 1
+#   24|                 ValueCategory = prvalue
+#   26|     4: ExprStmt
+#   26|       0: ... = ...
+#   26|           Type = int
+#   26|           ValueCategory = prvalue
+#   26|         0: x
+#   26|             Type = int
+#   26|             ValueCategory = lvalue
+#   26|           -1: coords
+#   26|               Type = MyCoords
+#   26|               ValueCategory = lvalue
+#   26|         1: call to getX
+#   26|             Type = int
+#   26|             ValueCategory = prvalue
+#   26|           0: & ...
+#   26|               Type = MyCoords *
+#   26|               ValueCategory = prvalue
+#   26|             0: coords
+#   26|                 Type = MyCoords
+#   26|                 ValueCategory = lvalue
+#   28|     5: ExprStmt
+#   28|       0: call to doSomething
+#   28|           Type = void
+#   28|           ValueCategory = prvalue
+#   28|         0: (void *)...
+#   28|             Conversion = pointer conversion
+#   28|             Type = void *
+#   28|             ValueCategory = prvalue
+#   28|           expr: & ...
+#   28|               Type = int *
+#   28|               ValueCategory = prvalue
+#   28|             0: pos
+#   28|                 Type = int
+#   28|                 ValueCategory = lvalue
+#   29|     6: return ...
+test.cpp:
+#    1| source() -> int
+#    1|   params: 
+#    2| sink() -> void
+#    2|   params: 
+#    4| intraprocedural_with_local_flow() -> void
+#    4|   params: 
+#    4|   body: { ... }
+#    5|     0: declaration
+#    5|       0: definition of t2
+#    5|           Type = int
+#    6|     1: declaration
+#    6|       0: definition of t1
+#    6|           Type = int
+#    6|         init: initializer for t1
+#    6|           expr: call to source
+#    6|               Type = int
+#    6|               ValueCategory = prvalue
+#    7|     2: ExprStmt
+#    7|       0: call to sink
+#    7|           Type = void
+#    7|           ValueCategory = prvalue
+#    7|         0: t1
+#    7|             Type = int
+#    7|             ValueCategory = prvalue(load)
+#    8|     3: ExprStmt
+#    8|       0: ... = ...
+#    8|           Type = int
+#    8|           ValueCategory = lvalue
+#    8|         0: t2
+#    8|             Type = int
+#    8|             ValueCategory = lvalue
+#    8|         1: t1
+#    8|             Type = int
+#    8|             ValueCategory = prvalue(load)
+#    9|     4: ExprStmt
+#    9|       0: call to sink
+#    9|           Type = void
+#    9|           ValueCategory = prvalue
+#    9|         0: t1
+#    9|             Type = int
+#    9|             ValueCategory = prvalue(load)
+#   10|     5: ExprStmt
+#   10|       0: call to sink
+#   10|           Type = void
+#   10|           ValueCategory = prvalue
+#   10|         0: t2
+#   10|             Type = int
+#   10|             ValueCategory = prvalue(load)
+#   11|     6: if (...) ... 
+#   11|       0: (bool)...
+#   11|           Conversion = conversion to bool
+#   11|           Type = bool
+#   11|           ValueCategory = prvalue
+#   11|         expr: t1
+#   11|             Type = int
+#   11|             ValueCategory = prvalue(load)
+#   11|       1: { ... }
+#   12|         0: ExprStmt
+#   12|           0: ... = ...
+#   12|               Type = int
+#   12|               ValueCategory = lvalue
+#   12|             0: t2
+#   12|                 Type = int
+#   12|                 ValueCategory = lvalue
+#   12|             1: 0
+#   12|                 Type = int
+#   12|                 Value = 0
+#   12|                 ValueCategory = prvalue
+#   13|         1: ExprStmt
+#   13|           0: call to sink
+#   13|               Type = void
+#   13|               ValueCategory = prvalue
+#   13|             0: t2
+#   13|                 Type = int
+#   13|                 ValueCategory = prvalue(load)
+#   15|     7: ExprStmt
+#   15|       0: call to sink
+#   15|           Type = void
+#   15|           ValueCategory = prvalue
+#   15|         0: t2
+#   15|             Type = int
+#   15|             ValueCategory = prvalue(load)
+#   17|     8: ExprStmt
+#   17|       0: ... = ...
+#   17|           Type = int
+#   17|           ValueCategory = lvalue
+#   17|         0: t1
+#   17|             Type = int
+#   17|             ValueCategory = lvalue
+#   17|         1: 0
+#   17|             Type = int
+#   17|             Value = 0
+#   17|             ValueCategory = prvalue
+#   18|     9: while (...) ...
+#   18|       0: 0
+#   18|           Type = bool
+#   18|           Value = 0
+#   18|           ValueCategory = prvalue
+#   18|       1: { ... }
+#   19|         0: ExprStmt
+#   19|           0: ... = ...
+#   19|               Type = int
+#   19|               ValueCategory = lvalue
+#   19|             0: t1
+#   19|                 Type = int
+#   19|                 ValueCategory = lvalue
+#   19|             1: t2
+#   19|                 Type = int
+#   19|                 ValueCategory = prvalue(load)
+#   21|     10: ExprStmt
+#   21|       0: call to sink
+#   21|           Type = void
+#   21|           ValueCategory = prvalue
+#   21|         0: t1
+#   21|             Type = int
+#   21|             ValueCategory = prvalue(load)
+#   23|     11: for(...;...;...) ...
+#   23|       0: declaration
+#   23|         0: definition of i
+#   23|             Type = int
+#   23|           init: initializer for i
+#   23|             expr: 0
+#   23|                 Type = int
+#   23|                 Value = 0
+#   23|                 ValueCategory = prvalue
+#   23|       1: ... < ...
+#   23|           Type = bool
+#   23|           ValueCategory = prvalue
+#   23|         0: i
+#   23|             Type = int
+#   23|             ValueCategory = prvalue(load)
+#   23|         1: t1
+#   23|             Type = int
+#   23|             ValueCategory = prvalue(load)
+#   23|       2: ... ++
+#   23|           Type = int
+#   23|           ValueCategory = prvalue
+#   23|         0: i
+#   23|             Type = int
+#   23|             ValueCategory = lvalue
+#   23|       3: { ... }
+#   24|         0: ExprStmt
+#   24|           0: ... = ...
+#   24|               Type = int
+#   24|               ValueCategory = lvalue
+#   24|             0: t1
+#   24|                 Type = int
+#   24|                 ValueCategory = lvalue
+#   24|             1: t2
+#   24|                 Type = int
+#   24|                 ValueCategory = prvalue(load)
+#   26|     12: ExprStmt
+#   26|       0: call to sink
+#   26|           Type = void
+#   26|           ValueCategory = prvalue
+#   26|         0: t1
+#   26|             Type = int
+#   26|             ValueCategory = prvalue(load)
+#   27|     13: return ...
+#   29| callee(int, int) -> void
+#   29|   params: 
+#   29|     0: t
+#   29|         Type = int
+#   29|     1: c
+#   29|         Type = int
+#   29|   body: { ... }
+#   30|     0: ExprStmt
+#   30|       0: call to sink
+#   30|           Type = void
+#   30|           ValueCategory = prvalue
+#   30|         0: t
+#   30|             Type = int
+#   30|             ValueCategory = prvalue(load)
+#   31|     1: ExprStmt
+#   31|       0: call to sink
+#   31|           Type = void
+#   31|           ValueCategory = prvalue
+#   31|         0: c
+#   31|             Type = int
+#   31|             ValueCategory = prvalue(load)
+#   32|     2: return ...
+#   34| caller() -> void
+#   34|   params: 
+#   34|   body: { ... }
+#   35|     0: ExprStmt
+#   35|       0: call to callee
+#   35|           Type = void
+#   35|           ValueCategory = prvalue
+#   35|         0: call to source
+#   35|             Type = int
+#   35|             ValueCategory = prvalue
+#   35|         1: 0
+#   35|             Type = int
+#   35|             Value = 0
+#   35|             ValueCategory = prvalue
+#   36|     1: ExprStmt
+#   36|       0: call to callee
+#   36|           Type = void
+#   36|           ValueCategory = prvalue
+#   36|         0: 1
+#   36|             Type = int
+#   36|             Value = 1
+#   36|             ValueCategory = prvalue
+#   36|         1: call to source
+#   36|             Type = int
+#   36|             ValueCategory = prvalue
+#   37|     2: return ...
+#   39| branching(bool) -> void
+#   39|   params: 
+#   39|     0: b
+#   39|         Type = bool
+#   39|   body: { ... }
+#   40|     0: { ... }
+#   41|       0: declaration
+#   41|         0: definition of t1
+#   41|             Type = int
+#   41|           init: initializer for t1
+#   41|             expr: 1
+#   41|                 Type = int
+#   41|                 Value = 1
+#   41|                 ValueCategory = prvalue
+#   41|         1: definition of t2
+#   41|             Type = int
+#   41|           init: initializer for t2
+#   41|             expr: 2
+#   41|                 Type = int
+#   41|                 Value = 2
+#   41|                 ValueCategory = prvalue
+#   42|       1: declaration
+#   42|         0: definition of t
+#   42|             Type = int
+#   42|           init: initializer for t
+#   42|             expr: call to source
+#   42|                 Type = int
+#   42|                 ValueCategory = prvalue
+#   43|       2: ExprStmt
+#   43|         0: call to sink
+#   43|             Type = void
+#   43|             ValueCategory = prvalue
+#   43|           0: ... ? ... : ...
+#   43|               Type = int
+#   43|               ValueCategory = prvalue
+#   43|             0: (bool)...
+#   43|                 Conversion = conversion to bool
+#   43|                 Type = bool
+#   43|                 ValueCategory = prvalue
+#   43|               expr: t
+#   43|                   Type = int
+#   43|                   ValueCategory = prvalue(load)
+#   43|             1: t1
+#   43|                 Type = int
+#   43|                 ValueCategory = prvalue(load)
+#   43|             2: t2
+#   43|                 Type = int
+#   43|                 ValueCategory = prvalue(load)
+#   45|       3: ExprStmt
+#   45|         0: ... = ...
+#   45|             Type = int
+#   45|             ValueCategory = lvalue
+#   45|           0: t
+#   45|               Type = int
+#   45|               ValueCategory = lvalue
+#   45|           1: ... ? ... : ...
+#   45|               Type = int
+#   45|               ValueCategory = prvalue
+#   45|             0: b
+#   45|                 Type = bool
+#   45|                 ValueCategory = prvalue(load)
+#   45|             1: t1
+#   45|                 Type = int
+#   45|                 ValueCategory = prvalue(load)
+#   45|             2: t2
+#   45|                 Type = int
+#   45|                 ValueCategory = prvalue(load)
+#   46|       4: ExprStmt
+#   46|         0: call to sink
+#   46|             Type = void
+#   46|             ValueCategory = prvalue
+#   46|           0: t
+#   46|               Type = int
+#   46|               ValueCategory = prvalue(load)
+#   49|     1: { ... }
+#   50|       0: declaration
+#   50|         0: definition of t1
+#   50|             Type = int
+#   50|           init: initializer for t1
+#   50|             expr: call to source
+#   50|                 Type = int
+#   50|                 ValueCategory = prvalue
+#   50|         1: definition of t
+#   50|             Type = int
+#   50|           init: initializer for t
+#   50|             expr: 0
+#   50|                 Type = int
+#   50|                 Value = 0
+#   50|                 ValueCategory = prvalue
+#   51|       1: if (...) ... 
+#   51|         0: b
+#   51|             Type = bool
+#   51|             ValueCategory = prvalue(load)
+#   51|         1: { ... }
+#   52|           0: ExprStmt
+#   52|             0: ... = ...
+#   52|                 Type = int
+#   52|                 ValueCategory = lvalue
+#   52|               0: t
+#   52|                   Type = int
+#   52|                   ValueCategory = lvalue
+#   52|               1: t1
+#   52|                   Type = int
+#   52|                   ValueCategory = prvalue(load)
+#   53|         2: { ... }
+#   54|           0: ExprStmt
+#   54|             0: ... = ...
+#   54|                 Type = int
+#   54|                 ValueCategory = lvalue
+#   54|               0: t
+#   54|                   Type = int
+#   54|                   ValueCategory = lvalue
+#   54|               1: 1
+#   54|                   Type = int
+#   54|                   Value = 1
+#   54|                   ValueCategory = prvalue
+#   58|       2: ExprStmt
+#   58|         0: call to sink
+#   58|             Type = void
+#   58|             ValueCategory = prvalue
+#   58|           0: t
+#   58|               Type = int
+#   58|               ValueCategory = prvalue(load)
+#   60|     2: return ...
+#   63| std::move<T>(T &) -> T &&
+#   63|   params: 
+#   63|     0: t
+#   63|         Type = T &
+#   63| std::move<int *>(int *&) -> int *&&
+#   63|   params: 
+#   63|     0: t
+#   63|         Type = int *&
+#   66| identityOperations(int *) -> void
+#   66|   params: 
+#   66|     0: source1
+#   66|         Type = int *
+#   66|   body: { ... }
+#   67|     0: declaration
+#   67|       0: definition of x1
+#   67|           Type = const int *
+#   67|         init: initializer for x1
+#   67|           expr: (const int *)...
+#   67|               Conversion = pointer conversion
+#   67|               Type = const int *
+#   67|               ValueCategory = prvalue
+#   67|             expr: (reference dereference)
+#   67|                 Type = int *
+#   67|                 ValueCategory = prvalue(load)
+#   67|               expr: call to move
+#   67|                   Type = int *&&
+#   67|                   ValueCategory = prvalue
+#   67|                 0: (reference to)
+#   67|                     Type = int *&
+#   67|                     ValueCategory = prvalue
+#   67|                   expr: source1
+#   67|                       Type = int *
+#   67|                       ValueCategory = lvalue
+#   68|     1: declaration
+#   68|       0: definition of x2
+#   68|           Type = int *
+#   68|         init: initializer for x2
+#   68|           expr: const_cast<int *>...
+#   68|               Conversion = pointer conversion
+#   68|               Type = int *
+#   68|               ValueCategory = prvalue
+#   68|             expr: x1
+#   68|                 Type = const int *
+#   68|                 ValueCategory = prvalue(load)
+#   69|     2: declaration
+#   69|       0: definition of x3
+#   69|           Type = int *
+#   69|         init: initializer for x3
+#   69|           expr: (...)
+#   69|               Type = int *
+#   69|               ValueCategory = prvalue
+#   69|             expr: x2
+#   69|                 Type = int *
+#   69|                 ValueCategory = prvalue(load)
+#   70|     3: declaration
+#   70|       0: definition of x4
+#   70|           Type = const int *
+#   70|         init: initializer for x4
+#   70|           expr: (const int *)...
+#   70|               Conversion = pointer conversion
+#   70|               Type = const int *
+#   70|               ValueCategory = prvalue
+#   70|             expr: x3
+#   70|                 Type = int *
+#   70|                 ValueCategory = prvalue(load)
+#   71|     4: ExprStmt
+#   71|       0: call to sink
+#   71|           Type = void
+#   71|           ValueCategory = prvalue
+#   71|         0: x4
+#   71|             Type = const int *
+#   71|             ValueCategory = prvalue(load)
+#   72|     5: return ...
+#   74| trackUninitialized() -> void
+#   74|   params: 
+#   74|   body: { ... }
+#   75|     0: declaration
+#   75|       0: definition of u1
+#   75|           Type = int
+#   76|     1: ExprStmt
+#   76|       0: call to sink
+#   76|           Type = void
+#   76|           ValueCategory = prvalue
+#   76|         0: u1
+#   76|             Type = int
+#   76|             ValueCategory = prvalue(load)
+#   77|     2: ExprStmt
+#   77|       0: ... = ...
+#   77|           Type = int
+#   77|           ValueCategory = lvalue
+#   77|         0: u1
+#   77|             Type = int
+#   77|             ValueCategory = lvalue
+#   77|         1: 2
+#   77|             Type = int
+#   77|             Value = 2
+#   77|             ValueCategory = prvalue
+#   78|     3: ExprStmt
+#   78|       0: call to sink
+#   78|           Type = void
+#   78|           ValueCategory = prvalue
+#   78|         0: u1
+#   78|             Type = int
+#   78|             ValueCategory = prvalue(load)
+#   80|     4: declaration
+#   80|       0: definition of i1
+#   80|           Type = int
+#   80|         init: initializer for i1
+#   80|           expr: 1
+#   80|               Type = int
+#   80|               Value = 1
+#   80|               ValueCategory = prvalue
+#   81|     5: ExprStmt
+#   81|       0: call to sink
+#   81|           Type = void
+#   81|           ValueCategory = prvalue
+#   81|         0: i1
+#   81|             Type = int
+#   81|             ValueCategory = prvalue(load)
+#   83|     6: declaration
+#   83|       0: definition of u2
+#   83|           Type = int
+#   84|     7: ExprStmt
+#   84|       0: call to sink
+#   84|           Type = void
+#   84|           ValueCategory = prvalue
+#   84|         0: ... ? ... : ...
+#   84|             Type = int
+#   84|             ValueCategory = prvalue
+#   84|           0: (bool)...
+#   84|               Conversion = conversion to bool
+#   84|               Type = bool
+#   84|               ValueCategory = prvalue
+#   84|             expr: i1
+#   84|                 Type = int
+#   84|                 ValueCategory = prvalue(load)
+#   84|           1: u2
+#   84|               Type = int
+#   84|               ValueCategory = prvalue(load)
+#   84|           2: 1
+#   84|               Type = int
+#   84|               Value = 1
+#   84|               ValueCategory = prvalue
+#   85|     8: ExprStmt
+#   85|       0: ... = ...
+#   85|           Type = int
+#   85|           ValueCategory = lvalue
+#   85|         0: i1
+#   85|             Type = int
+#   85|             ValueCategory = lvalue
+#   85|         1: u2
+#   85|             Type = int
+#   85|             ValueCategory = prvalue(load)
+#   86|     9: ExprStmt
+#   86|       0: call to sink
+#   86|           Type = void
+#   86|           ValueCategory = prvalue
+#   86|         0: i1
+#   86|             Type = int
+#   86|             ValueCategory = prvalue(load)
+#   87|     10: return ...
+#   89| local_references(int &, int) -> void
+#   89|   params: 
+#   89|     0: source1
+#   89|         Type = int &
+#   89|     1: clean1
+#   89|         Type = int
+#   89|   body: { ... }
+#   90|     0: ExprStmt
+#   90|       0: call to sink
+#   90|           Type = void
+#   90|           ValueCategory = prvalue
+#   90|         0: (reference dereference)
+#   90|             Type = int
+#   90|             ValueCategory = prvalue(load)
+#   90|           expr: source1
+#   90|               Type = int &
+#   90|               ValueCategory = prvalue(load)
+#   91|     1: ExprStmt
+#   91|       0: ... = ...
+#   91|           Type = int
+#   91|           ValueCategory = lvalue
+#   91|         0: (reference dereference)
+#   91|             Type = int
+#   91|             ValueCategory = lvalue
+#   91|           expr: source1
+#   91|               Type = int &
+#   91|               ValueCategory = prvalue(load)
+#   91|         1: clean1
+#   91|             Type = int
+#   91|             ValueCategory = prvalue(load)
+#   92|     2: ExprStmt
+#   92|       0: call to sink
+#   92|           Type = void
+#   92|           ValueCategory = prvalue
+#   92|         0: (reference dereference)
+#   92|             Type = int
+#   92|             ValueCategory = prvalue(load)
+#   92|           expr: source1
+#   92|               Type = int &
+#   92|               ValueCategory = prvalue(load)
+#   99|     3: { ... }
+#  100|       0: declaration
+#  100|         0: definition of t
+#  100|             Type = int
+#  100|           init: initializer for t
+#  100|             expr: call to source
+#  100|                 Type = int
+#  100|                 ValueCategory = prvalue
+#  101|       1: declaration
+#  101|         0: definition of ref
+#  101|             Type = int &
+#  101|           init: initializer for ref
+#  101|             expr: (reference to)
+#  101|                 Type = int &
+#  101|                 ValueCategory = prvalue
+#  101|               expr: t
+#  101|                   Type = int
+#  101|                   ValueCategory = lvalue
+#  102|       2: ExprStmt
+#  102|         0: ... = ...
+#  102|             Type = int
+#  102|             ValueCategory = lvalue
+#  102|           0: t
+#  102|               Type = int
+#  102|               ValueCategory = lvalue
+#  102|           1: clean1
+#  102|               Type = int
+#  102|               ValueCategory = prvalue(load)
+#  103|       3: ExprStmt
+#  103|         0: call to sink
+#  103|             Type = void
+#  103|             ValueCategory = prvalue
+#  103|           0: (reference dereference)
+#  103|               Type = int
+#  103|               ValueCategory = prvalue(load)
+#  103|             expr: ref
+#  103|                 Type = int &
+#  103|                 ValueCategory = prvalue(load)
+#  106|     4: { ... }
+#  107|       0: declaration
+#  107|         0: definition of t
+#  107|             Type = int
+#  107|           init: initializer for t
+#  107|             expr: clean1
+#  107|                 Type = int
+#  107|                 ValueCategory = prvalue(load)
+#  108|       1: declaration
+#  108|         0: definition of ref
+#  108|             Type = int &
+#  108|           init: initializer for ref
+#  108|             expr: (reference to)
+#  108|                 Type = int &
+#  108|                 ValueCategory = prvalue
+#  108|               expr: t
+#  108|                   Type = int
+#  108|                   ValueCategory = lvalue
+#  109|       2: ExprStmt
+#  109|         0: ... = ...
+#  109|             Type = int
+#  109|             ValueCategory = lvalue
+#  109|           0: t
+#  109|               Type = int
+#  109|               ValueCategory = lvalue
+#  109|           1: call to source
+#  109|               Type = int
+#  109|               ValueCategory = prvalue
+#  110|       3: ExprStmt
+#  110|         0: call to sink
+#  110|             Type = void
+#  110|             ValueCategory = prvalue
+#  110|           0: (reference dereference)
+#  110|               Type = int
+#  110|               ValueCategory = prvalue(load)
+#  110|             expr: ref
+#  110|                 Type = int &
+#  110|                 ValueCategory = prvalue(load)
+#  112|     5: return ...
+#  114| twoIntFields::operator=(const twoIntFields &) -> twoIntFields &
+#  114|   params: 
+#-----|     0: p#0
+#-----|         Type = const twoIntFields &
+#  114| twoIntFields::operator=(twoIntFields &&) -> twoIntFields &
+#  114|   params: 
+#-----|     0: p#0
+#-----|         Type = twoIntFields &&
+#  116| twoIntFields::getFirst() -> int
+#  116|   params: 
+#  116|   body: { ... }
+#  116|     0: return ...
+#  116|       0: m1
+#  116|           Type = int
+#  116|           ValueCategory = prvalue(load)
+#-----|         -1: this
+#-----|             Type = twoIntFields *
+#-----|             ValueCategory = prvalue(load)
+#  119| following_pointers(int[], int[], twoIntFields, twoIntFields *, ..(*)(..)) -> void
+#  119|   params: 
+#  120|     0: sourceArray1
+#  120|         Type = int[]
+#  121|     1: cleanArray1
+#  121|         Type = int[]
+#  122|     2: sourceStruct1
+#  122|         Type = twoIntFields
+#  123|     3: sourceStruct1_ptr
+#  123|         Type = twoIntFields *
+#  124|     4: sourceFunctionPointer
+#  124|         Type = ..(*)(..)
+#  125|   body: { ... }
+#  126|     0: ExprStmt
+#  126|       0: call to sink
+#  126|           Type = void
+#  126|           ValueCategory = prvalue
+#  126|         0: sourceArray1
+#  126|             Type = int *
+#  126|             ValueCategory = prvalue(load)
+#  128|     1: ExprStmt
+#  128|       0: call to sink
+#  128|           Type = void
+#  128|           ValueCategory = prvalue
+#  128|         0: access to array
+#  128|             Type = int
+#  128|             ValueCategory = prvalue(load)
+#  128|           0: sourceArray1
+#  128|               Type = int *
+#  128|               ValueCategory = prvalue(load)
+#  128|           1: 0
+#  128|               Type = int
+#  128|               Value = 0
+#  128|               ValueCategory = prvalue
+#  129|     2: ExprStmt
+#  129|       0: call to sink
+#  129|           Type = void
+#  129|           ValueCategory = prvalue
+#  129|         0: * ...
+#  129|             Type = int
+#  129|             ValueCategory = prvalue(load)
+#  129|           0: sourceArray1
+#  129|               Type = int *
+#  129|               ValueCategory = prvalue(load)
+#  130|     3: ExprStmt
+#  130|       0: call to sink
+#  130|           Type = void
+#  130|           ValueCategory = prvalue
+#  130|         0: & ...
+#  130|             Type = int **
+#  130|             ValueCategory = prvalue
+#  130|           0: sourceArray1
+#  130|               Type = int *
+#  130|               ValueCategory = lvalue
+#  132|     4: ExprStmt
+#  132|       0: call to sink
+#  132|           Type = void
+#  132|           ValueCategory = prvalue
+#  132|         0: m1
+#  132|             Type = int
+#  132|             ValueCategory = prvalue(load)
+#  132|           -1: sourceStruct1
+#  132|               Type = twoIntFields
+#  132|               ValueCategory = lvalue
+#  133|     5: ExprStmt
+#  133|       0: call to sink
+#  133|           Type = void
+#  133|           ValueCategory = prvalue
+#  133|         0: m1
+#  133|             Type = int
+#  133|             ValueCategory = prvalue(load)
+#  133|           -1: sourceStruct1_ptr
+#  133|               Type = twoIntFields *
+#  133|               ValueCategory = prvalue(load)
+#  134|     6: ExprStmt
+#  134|       0: call to sink
+#  134|           Type = void
+#  134|           ValueCategory = prvalue
+#  134|         0: call to getFirst
+#  134|             Type = int
+#  134|             ValueCategory = prvalue
+#  134|           -1: sourceStruct1_ptr
+#  134|               Type = twoIntFields *
+#  134|               ValueCategory = prvalue(load)
+#  136|     7: ExprStmt
+#  136|       0: ... = ...
+#  136|           Type = int
+#  136|           ValueCategory = lvalue
+#  136|         0: m1
+#  136|             Type = int
+#  136|             ValueCategory = lvalue
+#  136|           -1: sourceStruct1_ptr
+#  136|               Type = twoIntFields *
+#  136|               ValueCategory = prvalue(load)
+#  136|         1: call to source
+#  136|             Type = int
+#  136|             ValueCategory = prvalue
+#  137|     8: ExprStmt
+#  137|       0: call to sink
+#  137|           Type = void
+#  137|           ValueCategory = prvalue
+#  137|         0: m1
+#  137|             Type = int
+#  137|             ValueCategory = prvalue(load)
+#  137|           -1: sourceStruct1_ptr
+#  137|               Type = twoIntFields *
+#  137|               ValueCategory = prvalue(load)
+#  138|     9: ExprStmt
+#  138|       0: call to sink
+#  138|           Type = void
+#  138|           ValueCategory = prvalue
+#  138|         0: call to getFirst
+#  138|             Type = int
+#  138|             ValueCategory = prvalue
+#  138|           -1: sourceStruct1_ptr
+#  138|               Type = twoIntFields *
+#  138|               ValueCategory = prvalue(load)
+#  139|     10: ExprStmt
+#  139|       0: call to sink
+#  139|           Type = void
+#  139|           ValueCategory = prvalue
+#  139|         0: m2
+#  139|             Type = int
+#  139|             ValueCategory = prvalue(load)
+#  139|           -1: sourceStruct1_ptr
+#  139|               Type = twoIntFields *
+#  139|               ValueCategory = prvalue(load)
+#  140|     11: ExprStmt
+#  140|       0: call to sink
+#  140|           Type = void
+#  140|           ValueCategory = prvalue
+#  140|         0: m1
+#  140|             Type = int
+#  140|             ValueCategory = prvalue(load)
+#  140|           -1: sourceStruct1
+#  140|               Type = twoIntFields
+#  140|               ValueCategory = lvalue
+#  142|     12: declaration
+#  142|       0: definition of s
+#  142|           Type = twoIntFields
+#  142|         init: initializer for s
+#  142|           expr: {...}
+#  142|               Type = twoIntFields
+#  142|               ValueCategory = prvalue
+#  142|             .m1: call to source
+#  142|                 Type = int
+#  142|                 ValueCategory = prvalue
+#  142|             .m2: call to source
+#  142|                 Type = int
+#  142|                 ValueCategory = prvalue
+#  145|     13: ExprStmt
+#  145|       0: call to sink
+#  145|           Type = void
+#  145|           ValueCategory = prvalue
+#  145|         0: m2
+#  145|             Type = int
+#  145|             ValueCategory = prvalue(load)
+#  145|           -1: s
+#  145|               Type = twoIntFields
+#  145|               ValueCategory = lvalue
+#  147|     14: declaration
+#  147|       0: definition of sArray
+#  147|           Type = twoIntFields[1]
+#  147|         init: initializer for sArray
+#  147|           expr: {...}
+#  147|               Type = twoIntFields[1]
+#  147|               ValueCategory = prvalue
+#  147|             [0]: {...}
+#  147|                 Type = twoIntFields
+#  147|                 ValueCategory = prvalue
+#  147|               .m1: call to source
+#  147|                   Type = int
+#  147|                   ValueCategory = prvalue
+#  147|               .m2: call to source
+#  147|                   Type = int
+#  147|                   ValueCategory = prvalue
+#  149|     15: ExprStmt
+#  149|       0: call to sink
+#  149|           Type = void
+#  149|           ValueCategory = prvalue
+#  149|         0: m2
+#  149|             Type = int
+#  149|             ValueCategory = prvalue(load)
+#  149|           -1: access to array
+#  149|               Type = twoIntFields
+#  149|               ValueCategory = lvalue
+#  149|             0: array to pointer conversion
+#  149|                 Type = twoIntFields *
+#  149|                 ValueCategory = prvalue
+#  149|               expr: sArray
+#  149|                   Type = twoIntFields[1]
+#  149|                   ValueCategory = lvalue
+#  149|             1: 0
+#  149|                 Type = int
+#  149|                 Value = 0
+#  149|                 ValueCategory = prvalue
+#  151|     16: declaration
+#  151|       0: definition of sSwapped
+#  151|           Type = twoIntFields
+#  151|         init: initializer for sSwapped
+#  151|           expr: {...}
+#  151|               Type = twoIntFields
+#  151|               ValueCategory = prvalue
+#  151|             .m2: call to source
+#  151|                 Type = int
+#  151|                 ValueCategory = prvalue
+#  151|             .m1: 0
+#  151|                 Type = int
+#  151|                 Value = 0
+#  151|                 ValueCategory = prvalue
+#  153|     17: ExprStmt
+#  153|       0: call to sink
+#  153|           Type = void
+#  153|           ValueCategory = prvalue
+#  153|         0: m2
+#  153|             Type = int
+#  153|             ValueCategory = prvalue(load)
+#  153|           -1: sSwapped
+#  153|               Type = twoIntFields
+#  153|               ValueCategory = lvalue
+#  155|     18: ExprStmt
+#  155|       0: call to sink
+#  155|           Type = void
+#  155|           ValueCategory = prvalue
+#  155|         0: call to expression
+#  155|             Type = int
+#  155|             ValueCategory = prvalue
+#  155|           0: sourceFunctionPointer
+#  155|               Type = ..(*)(..)
+#  155|               ValueCategory = prvalue(load)
+#  157|     19: declaration
+#  157|       0: definition of stackArray
+#  157|           Type = int[2]
+#  157|         init: initializer for stackArray
+#  157|           expr: {...}
+#  157|               Type = int[2]
+#  157|               ValueCategory = prvalue
+#  157|             [0]: call to source
+#  157|                 Type = int
+#  157|                 ValueCategory = prvalue
+#  157|             [1]: call to source
+#  157|                 Type = int
+#  157|                 ValueCategory = prvalue
+#  158|     20: ExprStmt
+#  158|       0: ... = ...
+#  158|           Type = int
+#  158|           ValueCategory = lvalue
+#  158|         0: access to array
+#  158|             Type = int
+#  158|             ValueCategory = lvalue
+#  158|           0: array to pointer conversion
+#  158|               Type = int *
+#  158|               ValueCategory = prvalue
+#  158|             expr: stackArray
+#  158|                 Type = int[2]
+#  158|                 ValueCategory = lvalue
+#  158|           1: 0
+#  158|               Type = int
+#  158|               Value = 0
+#  158|               ValueCategory = prvalue
+#  158|         1: call to source
+#  158|             Type = int
+#  158|             ValueCategory = prvalue
+#  159|     21: ExprStmt
+#  159|       0: call to sink
+#  159|           Type = void
+#  159|           ValueCategory = prvalue
+#  159|         0: array to pointer conversion
+#  159|             Type = int *
+#  159|             ValueCategory = prvalue
+#  159|           expr: stackArray
+#  159|               Type = int[2]
+#  159|               ValueCategory = lvalue
+#  160|     22: return ...
+#  162| alwaysAssignSource(int *) -> int
+#  162|   params: 
+#  162|     0: out
+#  162|         Type = int *
+#  162|   body: { ... }
+#  163|     0: ExprStmt
+#  163|       0: ... = ...
+#  163|           Type = int
+#  163|           ValueCategory = lvalue
+#  163|         0: * ...
+#  163|             Type = int
+#  163|             ValueCategory = lvalue
+#  163|           0: out
+#  163|               Type = int *
+#  163|               ValueCategory = prvalue(load)
+#  163|         1: call to source
+#  163|             Type = int
+#  163|             ValueCategory = prvalue
+#  164|     1: return ...
+#  164|       0: 0
+#  164|           Type = int
+#  164|           Value = 0
+#  164|           ValueCategory = prvalue
+#  167| alwaysAssign0(int *) -> int
+#  167|   params: 
+#  167|     0: out
+#  167|         Type = int *
+#  167|   body: { ... }
+#  168|     0: ExprStmt
+#  168|       0: ... = ...
+#  168|           Type = int
+#  168|           ValueCategory = lvalue
+#  168|         0: * ...
+#  168|             Type = int
+#  168|             ValueCategory = lvalue
+#  168|           0: out
+#  168|               Type = int *
+#  168|               ValueCategory = prvalue(load)
+#  168|         1: 0
+#  168|             Type = int
+#  168|             Value = 0
+#  168|             ValueCategory = prvalue
+#  169|     1: return ...
+#  169|       0: 0
+#  169|           Type = int
+#  169|           Value = 0
+#  169|           ValueCategory = prvalue
+#  172| alwaysAssignInput(int *, int) -> int
+#  172|   params: 
+#  172|     0: out
+#  172|         Type = int *
+#  172|     1: in
+#  172|         Type = int
+#  172|   body: { ... }
+#  173|     0: ExprStmt
+#  173|       0: ... = ...
+#  173|           Type = int
+#  173|           ValueCategory = lvalue
+#  173|         0: * ...
+#  173|             Type = int
+#  173|             ValueCategory = lvalue
+#  173|           0: out
+#  173|               Type = int *
+#  173|               ValueCategory = prvalue(load)
+#  173|         1: in
+#  173|             Type = int
+#  173|             ValueCategory = prvalue(load)
+#  174|     1: return ...
+#  174|       0: 0
+#  174|           Type = int
+#  174|           Value = 0
+#  174|           ValueCategory = prvalue
+#  181| returnParameter(int) -> int
+#  181|   params: 
+#  181|     0: p
+#  181|         Type = int
+#  181|   body: { ... }
+#  182|     0: return ...
+#  182|       0: p
+#  182|           Type = int
+#  182|           ValueCategory = prvalue(load)
+#  185| callReturnParameter() -> void
+#  185|   params: 
+#  185|   body: { ... }
+#  186|     0: declaration
+#  186|       0: definition of x
+#  186|           Type = int
+#  186|         init: initializer for x
+#  186|           expr: call to returnParameter
+#  186|               Type = int
+#  186|               ValueCategory = prvalue
+#  186|             0: call to source
+#  186|                 Type = int
+#  186|                 ValueCategory = prvalue
+#  187|     1: declaration
+#  187|       0: definition of y
+#  187|           Type = int
+#  187|         init: initializer for y
+#  187|           expr: x
+#  187|               Type = int
+#  187|               ValueCategory = prvalue(load)
+#  188|     2: ExprStmt
+#  188|       0: call to sink
+#  188|           Type = void
+#  188|           ValueCategory = prvalue
+#  188|         0: y
+#  188|             Type = int
+#  188|             ValueCategory = prvalue(load)
+#  189|     3: return ...
+#  191| returnSourceParameter(int) -> int
+#  191|   params: 
+#  191|     0: s
+#  191|         Type = int
+#  191|   body: { ... }
+#  192|     0: ExprStmt
+#  192|       0: call to sink
+#  192|           Type = void
+#  192|           ValueCategory = prvalue
+#  192|         0: s
+#  192|             Type = int
+#  192|             ValueCategory = prvalue(load)
+#  193|     1: return ...
+#  193|       0: s
+#  193|           Type = int
+#  193|           ValueCategory = prvalue(load)
+#  196| callReturnSourceParameter() -> void
+#  196|   params: 
+#  196|   body: { ... }
+#  197|     0: declaration
+#  197|       0: definition of x
+#  197|           Type = int
+#  197|         init: initializer for x
+#  197|           expr: call to returnSourceParameter
+#  197|               Type = int
+#  197|               ValueCategory = prvalue
+#  197|             0: 0
+#  197|                 Type = int
+#  197|                 Value = 0
+#  197|                 ValueCategory = prvalue
+#  198|     1: ExprStmt
+#  198|       0: call to sink
+#  198|           Type = void
+#  198|           ValueCategory = prvalue
+#  198|         0: x
+#  198|             Type = int
+#  198|             ValueCategory = prvalue(load)
+#  199|     2: declaration
+#  199|       0: definition of y
+#  199|           Type = int
+#  199|         init: initializer for y
+#  199|           expr: call to returnSourceParameter
+#  199|               Type = int
+#  199|               ValueCategory = prvalue
+#  199|             0: call to source
+#  199|                 Type = int
+#  199|                 ValueCategory = prvalue
+#  200|     3: ExprStmt
+#  200|       0: call to sink
+#  200|           Type = void
+#  200|           ValueCategory = prvalue
+#  200|         0: y
+#  200|             Type = int
+#  200|             ValueCategory = prvalue(load)
+#  201|     4: return ...
+#  203| returnSourceParameter2(int) -> int
+#  203|   params: 
+#  203|     0: s
+#  203|         Type = int
+#  203|   body: { ... }
+#  204|     0: declaration
+#  204|       0: definition of x
+#  204|           Type = int
+#  204|         init: initializer for x
+#  204|           expr: s
+#  204|               Type = int
+#  204|               ValueCategory = prvalue(load)
+#  205|     1: ExprStmt
+#  205|       0: call to sink
+#  205|           Type = void
+#  205|           ValueCategory = prvalue
+#  205|         0: x
+#  205|             Type = int
+#  205|             ValueCategory = prvalue(load)
+#  206|     2: return ...
+#  206|       0: x
+#  206|           Type = int
+#  206|           ValueCategory = prvalue(load)
+#  209| callReturnSourceParameter2() -> void
+#  209|   params: 
+#  209|   body: { ... }
+#  210|     0: declaration
+#  210|       0: definition of x
+#  210|           Type = int
+#  210|         init: initializer for x
+#  210|           expr: call to returnSourceParameter2
+#  210|               Type = int
+#  210|               ValueCategory = prvalue
+#  210|             0: 0
+#  210|                 Type = int
+#  210|                 Value = 0
+#  210|                 ValueCategory = prvalue
+#  211|     1: ExprStmt
+#  211|       0: call to sink
+#  211|           Type = void
+#  211|           ValueCategory = prvalue
+#  211|         0: x
+#  211|             Type = int
+#  211|             ValueCategory = prvalue(load)
+#  212|     2: declaration
+#  212|       0: definition of y
+#  212|           Type = int
+#  212|         init: initializer for y
+#  212|           expr: call to returnSourceParameter2
+#  212|               Type = int
+#  212|               ValueCategory = prvalue
+#  212|             0: call to source
+#  212|                 Type = int
+#  212|                 ValueCategory = prvalue
+#  213|     3: ExprStmt
+#  213|       0: call to sink
+#  213|           Type = void
+#  213|           ValueCategory = prvalue
+#  213|         0: y
+#  213|             Type = int
+#  213|             ValueCategory = prvalue(load)
+#  214|     4: return ...
+#  218| returnSource() -> int
+#  218|   params: 
+#  218|   body: { ... }
+#  219|     0: declaration
+#  219|       0: definition of x
+#  219|           Type = int
+#  219|         init: initializer for x
+#  219|           expr: call to source
+#  219|               Type = int
+#  219|               ValueCategory = prvalue
+#  220|     1: return ...
+#  220|       0: x
+#  220|           Type = int
+#  220|           ValueCategory = prvalue(load)
+#  223| callReturnSource() -> void
+#  223|   params: 
+#  223|   body: { ... }
+#  224|     0: declaration
+#  224|       0: definition of x
+#  224|           Type = int
+#  224|         init: initializer for x
+#  224|           expr: call to returnSource
+#  224|               Type = int
+#  224|               ValueCategory = prvalue
+#  225|     1: declaration
+#  225|       0: definition of y
+#  225|           Type = int
+#  225|         init: initializer for y
+#  225|           expr: x
+#  225|               Type = int
+#  225|               ValueCategory = prvalue(load)
+#  226|     2: ExprStmt
+#  226|       0: call to sink
+#  226|           Type = void
+#  226|           ValueCategory = prvalue
+#  226|         0: y
+#  226|             Type = int
+#  226|             ValueCategory = prvalue(load)
+#  227|     3: return ...
+#  231| barrier() -> void
+#  231|   params: 
+#  233| BarrierTests::operator=(BarrierTests &&) -> BarrierTests &
+#  233|   params: 
+#-----|     0: p#0
+#-----|         Type = BarrierTests &&
+#  233| BarrierTests::operator=(const BarrierTests &) -> BarrierTests &
+#  233|   params: 
+#-----|     0: p#0
+#-----|         Type = const BarrierTests &
+#  237| BarrierTests::returnParameter(int) -> int
+#  237|   params: 
+#  237|     0: p
+#  237|         Type = int
+#  237|   body: { ... }
+#  238|     0: return ...
+#  238|       0: p
+#  238|           Type = int
+#  238|           ValueCategory = prvalue(load)
+#  241| BarrierTests::callReturnParameter() -> void
+#  241|   params: 
+#  241|   body: { ... }
+#  242|     0: declaration
+#  242|       0: definition of x
+#  242|           Type = int
+#  242|         init: initializer for x
+#  242|           expr: call to returnParameter
+#  242|               Type = int
+#  242|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = BarrierTests *
+#-----|                 ValueCategory = prvalue(load)
+#  242|             0: call to source
+#  242|                 Type = int
+#  242|                 ValueCategory = prvalue
+#  243|     1: declaration
+#  243|       0: definition of barrier
+#  243|           Type = int
+#  243|         init: initializer for barrier
+#  243|           expr: x
+#  243|               Type = int
+#  243|               ValueCategory = prvalue(load)
+#  244|     2: declaration
+#  244|       0: definition of y
+#  244|           Type = int
+#  244|         init: initializer for y
+#  244|           expr: barrier
+#  244|               Type = int
+#  244|               ValueCategory = prvalue(load)
+#  245|     3: ExprStmt
+#  245|       0: call to sink
+#  245|           Type = void
+#  245|           ValueCategory = prvalue
+#  245|         0: y
+#  245|             Type = int
+#  245|             ValueCategory = prvalue(load)
+#  246|     4: return ...
+#  248| BarrierTests::returnSourceParameter(int) -> int
+#  248|   params: 
+#  248|     0: source
+#  248|         Type = int
+#  248|   body: { ... }
+#  249|     0: declaration
+#  249|       0: definition of barrier
+#  249|           Type = int
+#  249|         init: initializer for barrier
+#  249|           expr: source
+#  249|               Type = int
+#  249|               ValueCategory = prvalue(load)
+#  250|     1: ExprStmt
+#  250|       0: call to sink
+#  250|           Type = void
+#  250|           ValueCategory = prvalue
+#  250|         0: barrier
+#  250|             Type = int
+#  250|             ValueCategory = prvalue(load)
+#  251|     2: return ...
+#  251|       0: barrier
+#  251|           Type = int
+#  251|           ValueCategory = prvalue(load)
+#  254| BarrierTests::callReturnSourceParameter() -> void
+#  254|   params: 
+#  254|   body: { ... }
+#  255|     0: declaration
+#  255|       0: definition of x
+#  255|           Type = int
+#  255|         init: initializer for x
+#  255|           expr: call to returnSourceParameter
+#  255|               Type = int
+#  255|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = BarrierTests *
+#-----|                 ValueCategory = prvalue(load)
+#  255|             0: 0
+#  255|                 Type = int
+#  255|                 Value = 0
+#  255|                 ValueCategory = prvalue
+#  256|     1: ExprStmt
+#  256|       0: call to sink
+#  256|           Type = void
+#  256|           ValueCategory = prvalue
+#  256|         0: x
+#  256|             Type = int
+#  256|             ValueCategory = prvalue(load)
+#  257|     2: declaration
+#  257|       0: definition of y
+#  257|           Type = int
+#  257|         init: initializer for y
+#  257|           expr: call to returnSourceParameter
+#  257|               Type = int
+#  257|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = BarrierTests *
+#-----|                 ValueCategory = prvalue(load)
+#  257|             0: call to source
+#  257|                 Type = int
+#  257|                 ValueCategory = prvalue
+#  258|     3: ExprStmt
+#  258|       0: call to sink
+#  258|           Type = void
+#  258|           ValueCategory = prvalue
+#  258|         0: y
+#  258|             Type = int
+#  258|             ValueCategory = prvalue(load)
+#  259|     4: return ...
+#  261| BarrierTests::returnSourceParameter2(int) -> int
+#  261|   params: 
+#  261|     0: source
+#  261|         Type = int
+#  261|   body: { ... }
+#  262|     0: declaration
+#  262|       0: definition of barrier
+#  262|           Type = int
+#  262|         init: initializer for barrier
+#  262|           expr: source
+#  262|               Type = int
+#  262|               ValueCategory = prvalue(load)
+#  263|     1: declaration
+#  263|       0: definition of x
+#  263|           Type = int
+#  263|         init: initializer for x
+#  263|           expr: barrier
+#  263|               Type = int
+#  263|               ValueCategory = prvalue(load)
+#  264|     2: ExprStmt
+#  264|       0: call to sink
+#  264|           Type = void
+#  264|           ValueCategory = prvalue
+#  264|         0: x
+#  264|             Type = int
+#  264|             ValueCategory = prvalue(load)
+#  265|     3: return ...
+#  265|       0: x
+#  265|           Type = int
+#  265|           ValueCategory = prvalue(load)
+#  268| BarrierTests::callReturnSourceParameter2() -> void
+#  268|   params: 
+#  268|   body: { ... }
+#  269|     0: declaration
+#  269|       0: definition of x
+#  269|           Type = int
+#  269|         init: initializer for x
+#  269|           expr: call to returnSourceParameter2
+#  269|               Type = int
+#  269|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = BarrierTests *
+#-----|                 ValueCategory = prvalue(load)
+#  269|             0: 0
+#  269|                 Type = int
+#  269|                 Value = 0
+#  269|                 ValueCategory = prvalue
+#  270|     1: ExprStmt
+#  270|       0: call to sink
+#  270|           Type = void
+#  270|           ValueCategory = prvalue
+#  270|         0: x
+#  270|             Type = int
+#  270|             ValueCategory = prvalue(load)
+#  271|     2: declaration
+#  271|       0: definition of y
+#  271|           Type = int
+#  271|         init: initializer for y
+#  271|           expr: call to returnSourceParameter2
+#  271|               Type = int
+#  271|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = BarrierTests *
+#-----|                 ValueCategory = prvalue(load)
+#  271|             0: call to source
+#  271|                 Type = int
+#  271|                 ValueCategory = prvalue
+#  272|     3: ExprStmt
+#  272|       0: call to sink
+#  272|           Type = void
+#  272|           ValueCategory = prvalue
+#  272|         0: y
+#  272|             Type = int
+#  272|             ValueCategory = prvalue(load)
+#  273|     4: return ...
+#  277| BarrierTests::returnSource() -> int
+#  277|   params: 
+#  277|   body: { ... }
+#  278|     0: declaration
+#  278|       0: definition of x
+#  278|           Type = int
+#  278|         init: initializer for x
+#  278|           expr: call to source
+#  278|               Type = int
+#  278|               ValueCategory = prvalue
+#  279|     1: declaration
+#  279|       0: definition of barrier
+#  279|           Type = int
+#  279|         init: initializer for barrier
+#  279|           expr: x
+#  279|               Type = int
+#  279|               ValueCategory = prvalue(load)
+#  280|     2: return ...
+#  280|       0: barrier
+#  280|           Type = int
+#  280|           ValueCategory = prvalue(load)
+#  283| BarrierTests::callReturnSource() -> void
+#  283|   params: 
+#  283|   body: { ... }
+#  284|     0: declaration
+#  284|       0: definition of x
+#  284|           Type = int
+#  284|         init: initializer for x
+#  284|           expr: call to returnSource
+#  284|               Type = int
+#  284|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = BarrierTests *
+#-----|                 ValueCategory = prvalue(load)
+#  285|     1: declaration
+#  285|       0: definition of y
+#  285|           Type = int
+#  285|         init: initializer for y
+#  285|           expr: x
+#  285|               Type = int
+#  285|               ValueCategory = prvalue(load)
+#  286|     2: ExprStmt
+#  286|       0: call to sink
+#  286|           Type = void
+#  286|           ValueCategory = prvalue
+#  286|         0: y
+#  286|             Type = int
+#  286|             ValueCategory = prvalue(load)
+#  287|     3: return ...
+#  291| NestedTests::FlowIntoParameter::operator=(FlowIntoParameter &&) -> FlowIntoParameter &
+#  291|   params: 
+#-----|     0: p#0
+#-----|         Type = FlowIntoParameter &&
+#  291| NestedTests::FlowIntoParameter::operator=(const FlowIntoParameter &) -> FlowIntoParameter &
+#  291|   params: 
+#-----|     0: p#0
+#-----|         Type = const FlowIntoParameter &
+#  292| NestedTests::FlowIntoParameter::level0() -> void
+#  292|   params: 
+#  292|   body: { ... }
+#  293|     0: ExprStmt
+#  293|       0: call to level1
+#  293|           Type = void
+#  293|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowIntoParameter *
+#-----|             ValueCategory = prvalue(load)
+#  293|         0: call to source
+#  293|             Type = int
+#  293|             ValueCategory = prvalue
+#  294|     1: ExprStmt
+#  294|       0: call to safelevel1
+#  294|           Type = void
+#  294|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowIntoParameter *
+#-----|             ValueCategory = prvalue(load)
+#  294|         0: call to source
+#  294|             Type = int
+#  294|             ValueCategory = prvalue
+#  295|     2: return ...
+#  297| NestedTests::FlowIntoParameter::level1(int) -> void
+#  297|   params: 
+#  297|     0: x
+#  297|         Type = int
+#  297|   body: { ... }
+#  298|     0: declaration
+#  298|       0: definition of y
+#  298|           Type = int
+#  298|         init: initializer for y
+#  298|           expr: x
+#  298|               Type = int
+#  298|               ValueCategory = prvalue(load)
+#  299|     1: ExprStmt
+#  299|       0: call to level2
+#  299|           Type = void
+#  299|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowIntoParameter *
+#-----|             ValueCategory = prvalue(load)
+#  299|         0: y
+#  299|             Type = int
+#  299|             ValueCategory = prvalue(load)
+#  300|     2: return ...
+#  302| NestedTests::FlowIntoParameter::safelevel1(int) -> void
+#  302|   params: 
+#  302|     0: x
+#  302|         Type = int
+#  302|   body: { ... }
+#  303|     0: declaration
+#  303|       0: definition of barrier
+#  303|           Type = int
+#  303|         init: initializer for barrier
+#  303|           expr: x
+#  303|               Type = int
+#  303|               ValueCategory = prvalue(load)
+#  304|     1: ExprStmt
+#  304|       0: call to level2
+#  304|           Type = void
+#  304|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowIntoParameter *
+#-----|             ValueCategory = prvalue(load)
+#  304|         0: barrier
+#  304|             Type = int
+#  304|             ValueCategory = prvalue(load)
+#  305|     2: return ...
+#  307| NestedTests::FlowIntoParameter::level2(int) -> void
+#  307|   params: 
+#  307|     0: x
+#  307|         Type = int
+#  307|   body: { ... }
+#  308|     0: ExprStmt
+#  308|       0: call to sink
+#  308|           Type = void
+#  308|           ValueCategory = prvalue
+#  308|         0: x
+#  308|             Type = int
+#  308|             ValueCategory = prvalue(load)
+#  309|     1: return ...
+#  311| NestedTests::FlowThroughFunctionReturn::operator=(FlowThroughFunctionReturn &&) -> FlowThroughFunctionReturn &
+#  311|   params: 
+#-----|     0: p#0
+#-----|         Type = FlowThroughFunctionReturn &&
+#  311| NestedTests::FlowThroughFunctionReturn::operator=(const FlowThroughFunctionReturn &) -> FlowThroughFunctionReturn &
+#  311|   params: 
+#-----|     0: p#0
+#-----|         Type = const FlowThroughFunctionReturn &
+#  312| NestedTests::FlowThroughFunctionReturn::level0() -> void
+#  312|   params: 
+#  312|   body: { ... }
+#  313|     0: declaration
+#  313|       0: definition of x
+#  313|           Type = int
+#  313|         init: initializer for x
+#  313|           expr: call to level1
+#  313|               Type = int
+#  313|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = FlowThroughFunctionReturn *
+#-----|                 ValueCategory = prvalue(load)
+#  313|             0: call to source
+#  313|                 Type = int
+#  313|                 ValueCategory = prvalue
+#  314|     1: ExprStmt
+#  314|       0: call to sink
+#  314|           Type = void
+#  314|           ValueCategory = prvalue
+#  314|         0: x
+#  314|             Type = int
+#  314|             ValueCategory = prvalue(load)
+#  315|     2: ExprStmt
+#  315|       0: ... = ...
+#  315|           Type = int
+#  315|           ValueCategory = lvalue
+#  315|         0: x
+#  315|             Type = int
+#  315|             ValueCategory = lvalue
+#  315|         1: call to safelevel1
+#  315|             Type = int
+#  315|             ValueCategory = prvalue
+#-----|           -1: this
+#-----|               Type = FlowThroughFunctionReturn *
+#-----|               ValueCategory = prvalue(load)
+#  315|           0: call to source
+#  315|               Type = int
+#  315|               ValueCategory = prvalue
+#  316|     3: ExprStmt
+#  316|       0: call to sink
+#  316|           Type = void
+#  316|           ValueCategory = prvalue
+#  316|         0: x
+#  316|             Type = int
+#  316|             ValueCategory = prvalue(load)
+#  317|     4: return ...
+#  319| NestedTests::FlowThroughFunctionReturn::level1(int) -> int
+#  319|   params: 
+#  319|     0: x
+#  319|         Type = int
+#  319|   body: { ... }
+#  320|     0: declaration
+#  320|       0: definition of y
+#  320|           Type = int
+#  320|         init: initializer for y
+#  320|           expr: x
+#  320|               Type = int
+#  320|               ValueCategory = prvalue(load)
+#  321|     1: return ...
+#  321|       0: call to level2
+#  321|           Type = int
+#  321|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowThroughFunctionReturn *
+#-----|             ValueCategory = prvalue(load)
+#  321|         0: y
+#  321|             Type = int
+#  321|             ValueCategory = prvalue(load)
+#  324| NestedTests::FlowThroughFunctionReturn::safelevel1(int) -> int
+#  324|   params: 
+#  324|     0: x
+#  324|         Type = int
+#  324|   body: { ... }
+#  325|     0: declaration
+#  325|       0: definition of barrier
+#  325|           Type = int
+#  325|         init: initializer for barrier
+#  325|           expr: x
+#  325|               Type = int
+#  325|               ValueCategory = prvalue(load)
+#  326|     1: return ...
+#  326|       0: call to level2
+#  326|           Type = int
+#  326|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowThroughFunctionReturn *
+#-----|             ValueCategory = prvalue(load)
+#  326|         0: barrier
+#  326|             Type = int
+#  326|             ValueCategory = prvalue(load)
+#  329| NestedTests::FlowThroughFunctionReturn::level2(int) -> int
+#  329|   params: 
+#  329|     0: x
+#  329|         Type = int
+#  329|   body: { ... }
+#  330|     0: declaration
+#  330|       0: definition of y
+#  330|           Type = int
+#  330|         init: initializer for y
+#  330|           expr: x
+#  330|               Type = int
+#  330|               ValueCategory = prvalue(load)
+#  331|     1: return ...
+#  331|       0: y
+#  331|           Type = int
+#  331|           ValueCategory = prvalue(load)
+#  334| NestedTests::FlowOutOfFunction::operator=(FlowOutOfFunction &&) -> FlowOutOfFunction &
+#  334|   params: 
+#-----|     0: p#0
+#-----|         Type = FlowOutOfFunction &&
+#  334| NestedTests::FlowOutOfFunction::operator=(const FlowOutOfFunction &) -> FlowOutOfFunction &
+#  334|   params: 
+#-----|     0: p#0
+#-----|         Type = const FlowOutOfFunction &
+#  335| NestedTests::FlowOutOfFunction::level0() -> void
+#  335|   params: 
+#  335|   body: { ... }
+#  336|     0: declaration
+#  336|       0: definition of x
+#  336|           Type = int
+#  336|         init: initializer for x
+#  336|           expr: call to level1
+#  336|               Type = int
+#  336|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = FlowOutOfFunction *
+#-----|                 ValueCategory = prvalue(load)
+#  337|     1: ExprStmt
+#  337|       0: call to sink
+#  337|           Type = void
+#  337|           ValueCategory = prvalue
+#  337|         0: x
+#  337|             Type = int
+#  337|             ValueCategory = prvalue(load)
+#  338|     2: ExprStmt
+#  338|       0: ... = ...
+#  338|           Type = int
+#  338|           ValueCategory = lvalue
+#  338|         0: x
+#  338|             Type = int
+#  338|             ValueCategory = lvalue
+#  338|         1: call to safelevel1
+#  338|             Type = int
+#  338|             ValueCategory = prvalue
+#-----|           -1: this
+#-----|               Type = FlowOutOfFunction *
+#-----|               ValueCategory = prvalue(load)
+#  339|     3: ExprStmt
+#  339|       0: call to sink
+#  339|           Type = void
+#  339|           ValueCategory = prvalue
+#  339|         0: x
+#  339|             Type = int
+#  339|             ValueCategory = prvalue(load)
+#  340|     4: return ...
+#  342| NestedTests::FlowOutOfFunction::level1() -> int
+#  342|   params: 
+#  342|   body: { ... }
+#  343|     0: declaration
+#  343|       0: definition of y
+#  343|           Type = int
+#  343|         init: initializer for y
+#  343|           expr: call to level2
+#  343|               Type = int
+#  343|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = FlowOutOfFunction *
+#-----|                 ValueCategory = prvalue(load)
+#  344|     1: return ...
+#  344|       0: y
+#  344|           Type = int
+#  344|           ValueCategory = prvalue(load)
+#  347| NestedTests::FlowOutOfFunction::safelevel1() -> int
+#  347|   params: 
+#  347|   body: { ... }
+#  348|     0: declaration
+#  348|       0: definition of barrier
+#  348|           Type = int
+#  348|         init: initializer for barrier
+#  348|           expr: call to level2
+#  348|               Type = int
+#  348|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = FlowOutOfFunction *
+#-----|                 ValueCategory = prvalue(load)
+#  349|     1: return ...
+#  349|       0: barrier
+#  349|           Type = int
+#  349|           ValueCategory = prvalue(load)
+#  352| NestedTests::FlowOutOfFunction::level2() -> int
+#  352|   params: 
+#  352|   body: { ... }
+#  353|     0: declaration
+#  353|       0: definition of y
+#  353|           Type = int
+#  353|         init: initializer for y
+#  353|           expr: call to source
+#  353|               Type = int
+#  353|               ValueCategory = prvalue
+#  354|     1: return ...
+#  354|       0: y
+#  354|           Type = int
+#  354|           ValueCategory = prvalue(load)
+#  361| NestedTests::FlowOutOfFunction::f() -> void
+#  361|   params: 
+#  361|   body: { ... }
+#  362|     0: ExprStmt
+#  362|       0: call to g
+#  362|           Type = void
+#  362|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowOutOfFunction *
+#-----|             ValueCategory = prvalue(load)
+#  362|         0: call to source
+#  362|             Type = int
+#  362|             ValueCategory = prvalue
+#  363|     1: return ...
+#  364| NestedTests::FlowOutOfFunction::g(int) -> void
+#  364|   params: 
+#  364|     0: p
+#  364|         Type = int
+#  364|   body: { ... }
+#  365|     0: declaration
+#  365|       0: definition of x
+#  365|           Type = int
+#  365|         init: initializer for x
+#  365|           expr: call to h
+#  365|               Type = int
+#  365|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = FlowOutOfFunction *
+#-----|                 ValueCategory = prvalue(load)
+#  365|             0: p
+#  365|                 Type = int
+#  365|                 ValueCategory = prvalue(load)
+#  366|     1: ExprStmt
+#  366|       0: call to sink
+#  366|           Type = void
+#  366|           ValueCategory = prvalue
+#  366|         0: x
+#  366|             Type = int
+#  366|             ValueCategory = prvalue(load)
+#  367|     2: declaration
+#  367|       0: definition of y
+#  367|           Type = int
+#  367|         init: initializer for y
+#  367|           expr: call to h
+#  367|               Type = int
+#  367|               ValueCategory = prvalue
+#-----|             -1: this
+#-----|                 Type = FlowOutOfFunction *
+#-----|                 ValueCategory = prvalue(load)
+#  367|             0: 0
+#  367|                 Type = int
+#  367|                 Value = 0
+#  367|                 ValueCategory = prvalue
+#  368|     3: ExprStmt
+#  368|       0: call to sink
+#  368|           Type = void
+#  368|           ValueCategory = prvalue
+#  368|         0: y
+#  368|             Type = int
+#  368|             ValueCategory = prvalue(load)
+#  369|     4: ExprStmt
+#  369|       0: call to f
+#  369|           Type = void
+#  369|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowOutOfFunction *
+#-----|             ValueCategory = prvalue(load)
+#  370|     5: return ...
+#  371| NestedTests::FlowOutOfFunction::h(int) -> int
+#  371|   params: 
+#  371|     0: p
+#  371|         Type = int
+#  371|   body: { ... }
+#  372|     0: return ...
+#  372|       0: p
+#  372|           Type = int
+#  372|           ValueCategory = prvalue(load)
+#  380| FlowThroughGlobals::taintGlobal() -> int
+#  380|   params: 
+#  380|   body: { ... }
+#  381|     0: ExprStmt
+#  381|       0: ... = ...
+#  381|           Type = int
+#  381|           ValueCategory = lvalue
+#  381|         0: globalVar
+#  381|             Type = int
+#  381|             ValueCategory = lvalue
+#  381|         1: call to source
+#  381|             Type = int
+#  381|             ValueCategory = prvalue
+#  382|     1: return ...
+#  384| FlowThroughGlobals::f() -> int
+#  384|   params: 
+#  384|   body: { ... }
+#  385|     0: ExprStmt
+#  385|       0: call to sink
+#  385|           Type = void
+#  385|           ValueCategory = prvalue
+#  385|         0: globalVar
+#  385|             Type = int
+#  385|             ValueCategory = prvalue(load)
+#  386|     1: ExprStmt
+#  386|       0: call to taintGlobal
+#  386|           Type = int
+#  386|           ValueCategory = prvalue
+#  387|     2: ExprStmt
+#  387|       0: call to sink
+#  387|           Type = void
+#  387|           ValueCategory = prvalue
+#  387|         0: globalVar
+#  387|             Type = int
+#  387|             ValueCategory = prvalue(load)
+#  388|     3: return ...
+#  390| FlowThroughGlobals::calledAfterTaint() -> int
+#  390|   params: 
+#  390|   body: { ... }
+#  391|     0: ExprStmt
+#  391|       0: call to sink
+#  391|           Type = void
+#  391|           ValueCategory = prvalue
+#  391|         0: globalVar
+#  391|             Type = int
+#  391|             ValueCategory = prvalue(load)
+#  392|     1: return ...
+#  394| FlowThroughGlobals::taintAndCall() -> int
+#  394|   params: 
+#  394|   body: { ... }
+#  395|     0: ExprStmt
+#  395|       0: ... = ...
+#  395|           Type = int
+#  395|           ValueCategory = lvalue
+#  395|         0: globalVar
+#  395|             Type = int
+#  395|             ValueCategory = lvalue
+#  395|         1: call to source
+#  395|             Type = int
+#  395|             ValueCategory = prvalue
+#  396|     1: ExprStmt
+#  396|       0: call to calledAfterTaint
+#  396|           Type = int
+#  396|           ValueCategory = prvalue
+#  397|     2: ExprStmt
+#  397|       0: call to sink
+#  397|           Type = void
+#  397|           ValueCategory = prvalue
+#  397|         0: globalVar
+#  397|             Type = int
+#  397|             ValueCategory = prvalue(load)
+#  398|     3: return ...
+#  403| FlowThroughFields::FlowThroughFields() -> void
+#  403|   params: 
+#  403| FlowThroughFields::FlowThroughFields(FlowThroughFields &&) -> void
+#  403|   params: 
+#-----|     0: p#0
+#-----|         Type = FlowThroughFields &&
+#  403| FlowThroughFields::FlowThroughFields(const FlowThroughFields &) -> void
+#  403|   params: 
+#-----|     0: p#0
+#-----|         Type = const FlowThroughFields &
+#  403| FlowThroughFields::operator=(FlowThroughFields &&) -> FlowThroughFields &
+#  403|   params: 
+#-----|     0: p#0
+#-----|         Type = FlowThroughFields &&
+#  403| FlowThroughFields::operator=(const FlowThroughFields &) -> FlowThroughFields &
+#  403|   params: 
+#-----|     0: p#0
+#-----|         Type = const FlowThroughFields &
+#  406| FlowThroughFields::taintField() -> int
+#  406|   params: 
+#  406|   body: { ... }
+#  407|     0: ExprStmt
+#  407|       0: ... = ...
+#  407|           Type = int
+#  407|           ValueCategory = lvalue
+#  407|         0: field
+#  407|             Type = int
+#  407|             ValueCategory = lvalue
+#-----|           -1: this
+#-----|               Type = FlowThroughFields *
+#-----|               ValueCategory = prvalue(load)
+#  407|         1: call to source
+#  407|             Type = int
+#  407|             ValueCategory = prvalue
+#  408|     1: return ...
+#  410| FlowThroughFields::f() -> int
+#  410|   params: 
+#  410|   body: { ... }
+#  411|     0: ExprStmt
+#  411|       0: call to sink
+#  411|           Type = void
+#  411|           ValueCategory = prvalue
+#  411|         0: field
+#  411|             Type = int
+#  411|             ValueCategory = prvalue(load)
+#-----|           -1: this
+#-----|               Type = FlowThroughFields *
+#-----|               ValueCategory = prvalue(load)
+#  412|     1: ExprStmt
+#  412|       0: call to taintField
+#  412|           Type = int
+#  412|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowThroughFields *
+#-----|             ValueCategory = prvalue(load)
+#  413|     2: ExprStmt
+#  413|       0: call to sink
+#  413|           Type = void
+#  413|           ValueCategory = prvalue
+#  413|         0: field
+#  413|             Type = int
+#  413|             ValueCategory = prvalue(load)
+#-----|           -1: this
+#-----|               Type = FlowThroughFields *
+#-----|               ValueCategory = prvalue(load)
+#  414|     3: return ...
+#  416| FlowThroughFields::calledAfterTaint() -> int
+#  416|   params: 
+#  416|   body: { ... }
+#  417|     0: ExprStmt
+#  417|       0: call to sink
+#  417|           Type = void
+#  417|           ValueCategory = prvalue
+#  417|         0: field
+#  417|             Type = int
+#  417|             ValueCategory = prvalue(load)
+#-----|           -1: this
+#-----|               Type = FlowThroughFields *
+#-----|               ValueCategory = prvalue(load)
+#  418|     1: return ...
+#  420| FlowThroughFields::taintAndCall() -> int
+#  420|   params: 
+#  420|   body: { ... }
+#  421|     0: ExprStmt
+#  421|       0: ... = ...
+#  421|           Type = int
+#  421|           ValueCategory = lvalue
+#  421|         0: field
+#  421|             Type = int
+#  421|             ValueCategory = lvalue
+#-----|           -1: this
+#-----|               Type = FlowThroughFields *
+#-----|               ValueCategory = prvalue(load)
+#  421|         1: call to source
+#  421|             Type = int
+#  421|             ValueCategory = prvalue
+#  422|     1: ExprStmt
+#  422|       0: call to calledAfterTaint
+#  422|           Type = int
+#  422|           ValueCategory = prvalue
+#-----|         -1: this
+#-----|             Type = FlowThroughFields *
+#-----|             ValueCategory = prvalue(load)
+#  423|     2: ExprStmt
+#  423|       0: call to sink
+#  423|           Type = void
+#  423|           ValueCategory = prvalue
+#  423|         0: field
+#  423|             Type = int
+#  423|             ValueCategory = prvalue(load)
+#-----|           -1: this
+#-----|               Type = FlowThroughFields *
+#-----|               ValueCategory = prvalue(load)
+#  424|     3: return ...
+true_upon_entry.cpp:
+#    6| random() -> bool
+#    6|   params: 
+#    8| test1() -> int
+#    8|   params: 
+#    8|   body: { ... }
+#    9|     0: declaration
+#    9|       0: definition of x
+#    9|           Type = int
+#    9|         init: initializer for x
+#    9|           expr: call to source
+#    9|               Type = int
+#    9|               ValueCategory = prvalue
+#   10|     1: for(...;...;...) ...
+#   10|       0: declaration
+#   10|         0: definition of i
+#   10|             Type = int
+#   10|           init: initializer for i
+#   10|             expr: 0
+#   10|                 Type = int
+#   10|                 Value = 0
+#   10|                 ValueCategory = prvalue
+#   10|       1: ... < ...
+#   10|           Type = bool
+#   10|           ValueCategory = prvalue
+#   10|         0: i
+#   10|             Type = int
+#   10|             ValueCategory = prvalue(load)
+#   10|         1: 10
+#   10|             Type = int
+#   10|             Value = 10
+#   10|             ValueCategory = prvalue
+#   10|       2: ... ++
+#   10|           Type = int
+#   10|           ValueCategory = prvalue
+#   10|         0: i
+#   10|             Type = int
+#   10|             ValueCategory = lvalue
+#   10|       3: { ... }
+#   11|         0: ExprStmt
+#   11|           0: ... = ...
+#   11|               Type = int
+#   11|               ValueCategory = lvalue
+#   11|             0: x
+#   11|                 Type = int
+#   11|                 ValueCategory = lvalue
+#   11|             1: 0
+#   11|                 Type = int
+#   11|                 Value = 0
+#   11|                 ValueCategory = prvalue
+#   13|     2: ExprStmt
+#   13|       0: call to sink
+#   13|           Type = void
+#   13|           ValueCategory = prvalue
+#   13|         0: x
+#   13|             Type = int
+#   13|             ValueCategory = prvalue(load)
+#   14|     3: return ...
+#   16| test2(int) -> int
+#   16|   params: 
+#   16|     0: iterations
+#   16|         Type = int
+#   16|   body: { ... }
+#   17|     0: declaration
+#   17|       0: definition of x
+#   17|           Type = int
+#   17|         init: initializer for x
+#   17|           expr: call to source
+#   17|               Type = int
+#   17|               ValueCategory = prvalue
+#   18|     1: for(...;...;...) ...
+#   18|       0: declaration
+#   18|         0: definition of i
+#   18|             Type = int
+#   18|           init: initializer for i
+#   18|             expr: 0
+#   18|                 Type = int
+#   18|                 Value = 0
+#   18|                 ValueCategory = prvalue
+#   18|       1: ... < ...
+#   18|           Type = bool
+#   18|           ValueCategory = prvalue
+#   18|         0: i
+#   18|             Type = int
+#   18|             ValueCategory = prvalue(load)
+#   18|         1: iterations
+#   18|             Type = int
+#   18|             ValueCategory = prvalue(load)
+#   18|       2: ... ++
+#   18|           Type = int
+#   18|           ValueCategory = prvalue
+#   18|         0: i
+#   18|             Type = int
+#   18|             ValueCategory = lvalue
+#   18|       3: { ... }
+#   19|         0: ExprStmt
+#   19|           0: ... = ...
+#   19|               Type = int
+#   19|               ValueCategory = lvalue
+#   19|             0: x
+#   19|                 Type = int
+#   19|                 ValueCategory = lvalue
+#   19|             1: 0
+#   19|                 Type = int
+#   19|                 Value = 0
+#   19|                 ValueCategory = prvalue
+#   21|     2: ExprStmt
+#   21|       0: call to sink
+#   21|           Type = void
+#   21|           ValueCategory = prvalue
+#   21|         0: x
+#   21|             Type = int
+#   21|             ValueCategory = prvalue(load)
+#   22|     3: return ...
+#   24| test3() -> int
+#   24|   params: 
+#   24|   body: { ... }
+#   25|     0: declaration
+#   25|       0: definition of x
+#   25|           Type = int
+#   25|         init: initializer for x
+#   25|           expr: 0
+#   25|               Type = int
+#   25|               Value = 0
+#   25|               ValueCategory = prvalue
+#   26|     1: for(...;...;...) ...
+#   26|       0: declaration
+#   26|         0: definition of i
+#   26|             Type = int
+#   26|           init: initializer for i
+#   26|             expr: 0
+#   26|                 Type = int
+#   26|                 Value = 0
+#   26|                 ValueCategory = prvalue
+#   26|       1: ... < ...
+#   26|           Type = bool
+#   26|           ValueCategory = prvalue
+#   26|         0: i
+#   26|             Type = int
+#   26|             ValueCategory = prvalue(load)
+#   26|         1: 10
+#   26|             Type = int
+#   26|             Value = 10
+#   26|             ValueCategory = prvalue
+#   26|       2: ... ++
+#   26|           Type = int
+#   26|           ValueCategory = prvalue
+#   26|         0: i
+#   26|             Type = int
+#   26|             ValueCategory = lvalue
+#   26|       3: { ... }
+#   27|         0: ExprStmt
+#   27|           0: ... = ...
+#   27|               Type = int
+#   27|               ValueCategory = lvalue
+#   27|             0: x
+#   27|                 Type = int
+#   27|                 ValueCategory = lvalue
+#   27|             1: call to source
+#   27|                 Type = int
+#   27|                 ValueCategory = prvalue
+#   29|     2: ExprStmt
+#   29|       0: call to sink
+#   29|           Type = void
+#   29|           ValueCategory = prvalue
+#   29|         0: x
+#   29|             Type = int
+#   29|             ValueCategory = prvalue(load)
+#   30|     3: return ...
+#   32| test4() -> int
+#   32|   params: 
+#   32|   body: { ... }
+#   33|     0: declaration
+#   33|       0: definition of x
+#   33|           Type = int
+#   33|         init: initializer for x
+#   33|           expr: call to source
+#   33|               Type = int
+#   33|               ValueCategory = prvalue
+#   34|     1: for(...;...;...) ...
+#   34|       0: declaration
+#   34|         0: definition of i
+#   34|             Type = int
+#   34|           init: initializer for i
+#   34|             expr: 0
+#   34|                 Type = int
+#   34|                 Value = 0
+#   34|                 ValueCategory = prvalue
+#   34|       1: ... < ...
+#   34|           Type = bool
+#   34|           ValueCategory = prvalue
+#   34|         0: i
+#   34|             Type = int
+#   34|             ValueCategory = prvalue(load)
+#   34|         1: 10
+#   34|             Type = int
+#   34|             Value = 10
+#   34|             ValueCategory = prvalue
+#   34|       2: ... ++
+#   34|           Type = int
+#   34|           ValueCategory = prvalue
+#   34|         0: i
+#   34|             Type = int
+#   34|             ValueCategory = lvalue
+#   34|       3: { ... }
+#   35|         0: if (...) ... 
+#   35|           0: call to random
+#   35|               Type = bool
+#   35|               ValueCategory = prvalue
+#   36|           1: break;
+#   37|         1: ExprStmt
+#   37|           0: ... = ...
+#   37|               Type = int
+#   37|               ValueCategory = lvalue
+#   37|             0: x
+#   37|                 Type = int
+#   37|                 ValueCategory = lvalue
+#   37|             1: 0
+#   37|                 Type = int
+#   37|                 Value = 0
+#   37|                 ValueCategory = prvalue
+#   38|     2: label ...:
+#   39|     3: ExprStmt
+#   39|       0: call to sink
+#   39|           Type = void
+#   39|           ValueCategory = prvalue
+#   39|         0: x
+#   39|             Type = int
+#   39|             ValueCategory = prvalue(load)
+#   40|     4: return ...
+#   42| test5() -> int
+#   42|   params: 
+#   42|   body: { ... }
+#   43|     0: declaration
+#   43|       0: definition of x
+#   43|           Type = int
+#   43|         init: initializer for x
+#   43|           expr: call to source
+#   43|               Type = int
+#   43|               ValueCategory = prvalue
+#   44|     1: for(...;...;...) ...
+#   44|       0: declaration
+#   44|         0: definition of i
+#   44|             Type = int
+#   44|           init: initializer for i
+#   44|             expr: 0
+#   44|                 Type = int
+#   44|                 Value = 0
+#   44|                 ValueCategory = prvalue
+#   44|       1: ... < ...
+#   44|           Type = bool
+#   44|           ValueCategory = prvalue
+#   44|         0: i
+#   44|             Type = int
+#   44|             ValueCategory = prvalue(load)
+#   44|         1: 10
+#   44|             Type = int
+#   44|             Value = 10
+#   44|             ValueCategory = prvalue
+#   44|       2: ... ++
+#   44|           Type = int
+#   44|           ValueCategory = prvalue
+#   44|         0: i
+#   44|             Type = int
+#   44|             ValueCategory = lvalue
+#   44|       3: { ... }
+#   45|         0: if (...) ... 
+#   45|           0: call to random
+#   45|               Type = bool
+#   45|               ValueCategory = prvalue
+#   46|           1: continue;
+#   47|         1: ExprStmt
+#   47|           0: ... = ...
+#   47|               Type = int
+#   47|               ValueCategory = lvalue
+#   47|             0: x
+#   47|                 Type = int
+#   47|                 ValueCategory = lvalue
+#   47|             1: 0
+#   47|                 Type = int
+#   47|                 Value = 0
+#   47|                 ValueCategory = prvalue
+#   44|         2: label ...:
+#   49|     2: ExprStmt
+#   49|       0: call to sink
+#   49|           Type = void
+#   49|           ValueCategory = prvalue
+#   49|         0: x
+#   49|             Type = int
+#   49|             ValueCategory = prvalue(load)
+#   50|     3: return ...
+#   52| test6() -> int
+#   52|   params: 
+#   52|   body: { ... }
+#   53|     0: declaration
+#   53|       0: definition of y
+#   53|           Type = int
+#   54|     1: declaration
+#   54|       0: definition of x
+#   54|           Type = int
+#   54|         init: initializer for x
+#   54|           expr: call to source
+#   54|               Type = int
+#   54|               ValueCategory = prvalue
+#   55|     2: for(...;...;...) ...
+#   55|       0: declaration
+#   55|         0: definition of i
+#   55|             Type = int
+#   55|           init: initializer for i
+#   55|             expr: 0
+#   55|                 Type = int
+#   55|                 Value = 0
+#   55|                 ValueCategory = prvalue
+#   55|       1: ... && ...
+#   55|           Type = bool
+#   55|           ValueCategory = prvalue
+#   55|         0: ... < ...
+#   55|             Type = bool
+#   55|             ValueCategory = prvalue
+#   55|           0: i
+#   55|               Type = int
+#   55|               ValueCategory = prvalue(load)
+#   55|           1: 10
+#   55|               Type = int
+#   55|               Value = 10
+#   55|               ValueCategory = prvalue
+#   55|         1: (bool)...
+#   55|             Conversion = conversion to bool
+#   55|             Type = bool
+#   55|             ValueCategory = prvalue
+#   55|           expr: (...)
+#   55|               Type = int
+#   55|               ValueCategory = prvalue
+#   55|             expr: ... = ...
+#   55|                 Type = int
+#   55|                 ValueCategory = prvalue
+#   55|               0: y
+#   55|                   Type = int
+#   55|                   ValueCategory = lvalue
+#   55|               1: 1
+#   55|                   Type = int
+#   55|                   Value = 1
+#   55|                   ValueCategory = prvalue
+#   55|       2: ... ++
+#   55|           Type = int
+#   55|           ValueCategory = prvalue
+#   55|         0: i
+#   55|             Type = int
+#   55|             ValueCategory = lvalue
+#   55|       3: { ... }
+#   57|     3: ExprStmt
+#   57|       0: call to sink
+#   57|           Type = void
+#   57|           ValueCategory = prvalue
+#   57|         0: x
+#   57|             Type = int
+#   57|             ValueCategory = prvalue(load)
+#   58|     4: return ...
+#   60| test7() -> int
+#   60|   params: 
+#   60|   body: { ... }
+#   61|     0: declaration
+#   61|       0: definition of y
+#   61|           Type = int
+#   62|     1: declaration
+#   62|       0: definition of x
+#   62|           Type = int
+#   62|         init: initializer for x
+#   62|           expr: call to source
+#   62|               Type = int
+#   62|               ValueCategory = prvalue
+#   63|     2: for(...;...;...) ...
+#   63|       0: declaration
+#   63|         0: definition of i
+#   63|             Type = int
+#   63|           init: initializer for i
+#   63|             expr: 0
+#   63|                 Type = int
+#   63|                 Value = 0
+#   63|                 ValueCategory = prvalue
+#   63|       1: ... && ...
+#   63|           Type = bool
+#   63|           ValueCategory = prvalue
+#   63|         0: ... < ...
+#   63|             Type = bool
+#   63|             ValueCategory = prvalue
+#   63|           0: i
+#   63|               Type = int
+#   63|               ValueCategory = prvalue(load)
+#   63|           1: 10
+#   63|               Type = int
+#   63|               Value = 10
+#   63|               ValueCategory = prvalue
+#   63|         1: (bool)...
+#   63|             Conversion = conversion to bool
+#   63|             Type = bool
+#   63|             ValueCategory = prvalue
+#   63|           expr: (...)
+#   63|               Type = int
+#   63|               ValueCategory = prvalue
+#   63|             expr: ... = ...
+#   63|                 Type = int
+#   63|                 ValueCategory = prvalue
+#   63|               0: y
+#   63|                   Type = int
+#   63|                   ValueCategory = lvalue
+#   63|               1: 1
+#   63|                   Type = int
+#   63|                   Value = 1
+#   63|                   ValueCategory = prvalue
+#   63|       2: ... ++
+#   63|           Type = int
+#   63|           ValueCategory = prvalue
+#   63|         0: i
+#   63|             Type = int
+#   63|             ValueCategory = lvalue
+#   63|       3: { ... }
+#   64|         0: ExprStmt
+#   64|           0: ... = ...
+#   64|               Type = int
+#   64|               ValueCategory = lvalue
+#   64|             0: x
+#   64|                 Type = int
+#   64|                 ValueCategory = lvalue
+#   64|             1: 0
+#   64|                 Type = int
+#   64|                 Value = 0
+#   64|                 ValueCategory = prvalue
+#   66|     3: ExprStmt
+#   66|       0: call to sink
+#   66|           Type = void
+#   66|           ValueCategory = prvalue
+#   66|         0: x
+#   66|             Type = int
+#   66|             ValueCategory = prvalue(load)
+#   67|     4: return ...
+#   69| test8() -> int
+#   69|   params: 
+#   69|   body: { ... }
+#   70|     0: declaration
+#   70|       0: definition of x
+#   70|           Type = int
+#   70|         init: initializer for x
+#   70|           expr: call to source
+#   70|               Type = int
+#   70|               ValueCategory = prvalue
+#   76|     1: for(...;...;...) ...
+#   76|       0: declaration
+#   76|         0: definition of i
+#   76|             Type = int
+#   76|           init: initializer for i
+#   76|             expr: 0
+#   76|                 Type = int
+#   76|                 Value = 0
+#   76|                 ValueCategory = prvalue
+#   76|       1: ... && ...
+#   76|           Type = bool
+#   76|           ValueCategory = prvalue
+#   76|         0: ... < ...
+#   76|             Type = bool
+#   76|             ValueCategory = prvalue
+#   76|           0: i
+#   76|               Type = int
+#   76|               ValueCategory = prvalue(load)
+#   76|           1: 10
+#   76|               Type = int
+#   76|               Value = 10
+#   76|               ValueCategory = prvalue
+#   76|         1: (bool)...
+#   76|             Conversion = conversion to bool
+#   76|             Type = bool
+#   76|             ValueCategory = prvalue
+#   76|           expr: (...)
+#   76|               Type = int
+#   76|               ValueCategory = prvalue
+#   76|             expr: ... = ...
+#   76|                 Type = int
+#   76|                 ValueCategory = prvalue
+#   76|               0: x
+#   76|                   Type = int
+#   76|                   ValueCategory = lvalue
+#   76|               1: 1
+#   76|                   Type = int
+#   76|                   Value = 1
+#   76|                   ValueCategory = prvalue
+#   76|       2: ... ++
+#   76|           Type = int
+#   76|           ValueCategory = prvalue
+#   76|         0: i
+#   76|             Type = int
+#   76|             ValueCategory = lvalue
+#   76|       3: { ... }
+#   78|     2: ExprStmt
+#   78|       0: call to sink
+#   78|           Type = void
+#   78|           ValueCategory = prvalue
+#   78|         0: x
+#   78|             Type = int
+#   78|             ValueCategory = prvalue(load)
+#   79|     3: return ...
+#   81| test9() -> int
+#   81|   params: 
+#   81|   body: { ... }
+#   82|     0: declaration
+#   82|       0: definition of y
+#   82|           Type = int
+#   83|     1: declaration
+#   83|       0: definition of x
+#   83|           Type = int
+#   83|         init: initializer for x
+#   83|           expr: call to source
+#   83|               Type = int
+#   83|               ValueCategory = prvalue
+#   84|     2: for(...;...;...) ...
+#   84|       0: declaration
+#   84|         0: definition of i
+#   84|             Type = int
+#   84|           init: initializer for i
+#   84|             expr: 0
+#   84|                 Type = int
+#   84|                 Value = 0
+#   84|                 ValueCategory = prvalue
+#   84|       1: ... && ...
+#   84|           Type = bool
+#   84|           ValueCategory = prvalue
+#   84|         0: (bool)...
+#   84|             Conversion = conversion to bool
+#   84|             Type = bool
+#   84|             ValueCategory = prvalue
+#   84|           expr: (...)
+#   84|               Type = int
+#   84|               ValueCategory = prvalue
+#   84|             expr: ... = ...
+#   84|                 Type = int
+#   84|                 ValueCategory = prvalue
+#   84|               0: y
+#   84|                   Type = int
+#   84|                   ValueCategory = lvalue
+#   84|               1: 1
+#   84|                   Type = int
+#   84|                   Value = 1
+#   84|                   ValueCategory = prvalue
+#   84|         1: ... < ...
+#   84|             Type = bool
+#   84|             ValueCategory = prvalue
+#   84|           0: i
+#   84|               Type = int
+#   84|               ValueCategory = prvalue(load)
+#   84|           1: 10
+#   84|               Type = int
+#   84|               Value = 10
+#   84|               ValueCategory = prvalue
+#   84|       2: ... ++
+#   84|           Type = int
+#   84|           ValueCategory = prvalue
+#   84|         0: i
+#   84|             Type = int
+#   84|             ValueCategory = lvalue
+#   84|       3: { ... }
+#   86|     3: ExprStmt
+#   86|       0: call to sink
+#   86|           Type = void
+#   86|           ValueCategory = prvalue
+#   86|         0: x
+#   86|             Type = int
+#   86|             ValueCategory = prvalue(load)
+#   87|     4: return ...
+#   89| test10() -> int
+#   89|   params: 
+#   89|   body: { ... }
+#   90|     0: declaration
+#   90|       0: definition of x
+#   90|           Type = int
+#   90|         init: initializer for x
+#   90|           expr: call to source
+#   90|               Type = int
+#   90|               ValueCategory = prvalue
+#   91|     1: for(...;...;...) ...
+#   91|       0: declaration
+#   91|         0: definition of i
+#   91|             Type = int
+#   91|           init: initializer for i
+#   91|             expr: 0
+#   91|                 Type = int
+#   91|                 Value = 0
+#   91|                 ValueCategory = prvalue
+#   91|       1: ... && ...
+#   91|           Type = bool
+#   91|           ValueCategory = prvalue
+#   91|         0: (bool)...
+#   91|             Conversion = conversion to bool
+#   91|             Type = bool
+#   91|             ValueCategory = prvalue
+#   91|           expr: (...)
+#   91|               Type = int
+#   91|               ValueCategory = prvalue
+#   91|             expr: ... = ...
+#   91|                 Type = int
+#   91|                 ValueCategory = prvalue
+#   91|               0: x
+#   91|                   Type = int
+#   91|                   ValueCategory = lvalue
+#   91|               1: 1
+#   91|                   Type = int
+#   91|                   Value = 1
+#   91|                   ValueCategory = prvalue
+#   91|         1: ... < ...
+#   91|             Type = bool
+#   91|             ValueCategory = prvalue
+#   91|           0: i
+#   91|               Type = int
+#   91|               ValueCategory = prvalue(load)
+#   91|           1: 10
+#   91|               Type = int
+#   91|               Value = 10
+#   91|               ValueCategory = prvalue
+#   91|       2: ... ++
+#   91|           Type = int
+#   91|           ValueCategory = prvalue
+#   91|         0: i
+#   91|             Type = int
+#   91|             ValueCategory = lvalue
+#   91|       3: { ... }
+#   93|     2: ExprStmt
+#   93|       0: call to sink
+#   93|           Type = void
+#   93|           ValueCategory = prvalue
+#   93|         0: x
+#   93|             Type = int
+#   93|             ValueCategory = prvalue(load)
+#   94|     3: return ...
+#   96| test10(int, int) -> int
+#   96|   params: 
+#   96|     0: b
+#   96|         Type = int
+#   96|     1: d
+#   96|         Type = int
+#   96|   body: { ... }
+#   97|     0: declaration
+#   97|       0: definition of i
+#   97|           Type = int
+#   97|         init: initializer for i
+#   97|           expr: 0
+#   97|               Type = int
+#   97|               Value = 0
+#   97|               ValueCategory = prvalue
+#   98|     1: declaration
+#   98|       0: definition of x
+#   98|           Type = int
+#   98|         init: initializer for x
+#   98|           expr: call to source
+#   98|               Type = int
+#   98|               ValueCategory = prvalue
+#   99|     2: if (...) ... 
+#   99|       0: (bool)...
+#   99|           Conversion = conversion to bool
+#   99|           Type = bool
+#   99|           ValueCategory = prvalue
+#   99|         expr: b
+#   99|             Type = int
+#   99|             ValueCategory = prvalue(load)
+#  100|       1: goto ...
+#  101|     3: for(...;...;...) ...
+#  101|       1: ... < ...
+#  101|           Type = bool
+#  101|           ValueCategory = prvalue
+#  101|         0: i
+#  101|             Type = int
+#  101|             ValueCategory = prvalue(load)
+#  101|         1: 10
+#  101|             Type = int
+#  101|             Value = 10
+#  101|             ValueCategory = prvalue
+#  101|       2: ... += ...
+#  101|           Type = int
+#  101|           ValueCategory = lvalue
+#  101|         0: i
+#  101|             Type = int
+#  101|             ValueCategory = lvalue
+#  101|         1: d
+#  101|             Type = int
+#  101|             ValueCategory = prvalue(load)
+#  101|       3: { ... }
+#  102|         0: ExprStmt
+#  102|           0: ... = ...
+#  102|               Type = int
+#  102|               ValueCategory = lvalue
+#  102|             0: x
+#  102|                 Type = int
+#  102|                 ValueCategory = lvalue
+#  102|             1: 0
+#  102|                 Type = int
+#  102|                 Value = 0
+#  102|                 ValueCategory = prvalue
+#  103|         1: label ...:
+#  105|     4: ExprStmt
+#  105|       0: call to sink
+#  105|           Type = void
+#  105|           ValueCategory = prvalue
+#  105|         0: x
+#  105|             Type = int
+#  105|             ValueCategory = prvalue(load)
+#  106|     5: return ...

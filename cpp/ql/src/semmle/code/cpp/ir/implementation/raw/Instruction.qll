@@ -534,6 +534,15 @@ class FunctionInstruction extends Instruction {
   }
 }
 
+/**
+ * An instruction that computes the address of a function.
+ */
+class FunctionAddressInstruction extends FunctionInstruction {
+  FunctionAddressInstruction() {
+    opcode instanceof Opcode::FunctionAddress
+  }
+}
+
 class ConstantValueInstruction extends Instruction {
   string value;
 

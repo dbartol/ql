@@ -29,6 +29,27 @@ class Operand extends TOperand {
   }
 
   /**
+   * Gets the type of the value accessed by the operand.
+   */
+  Type getType() {
+    none()
+    result = getDefinitionInstruction().getResultType()
+  }
+
+  predicate isGLValue() {
+    none()
+    getDefinitionInstruction().isGLValue()
+  }
+
+  /**
+   * Gets the number of bytes accessed by this operand, if constant.
+   */
+  int getSize() {
+    none()
+    result = getDefinitionInstruction().getResultSize()
+  }
+
+  /**
    * Gets the `Instruction` whose result is the value of the operand.
    */
   Instruction getDefinitionInstruction() {
@@ -395,6 +416,39 @@ class PhiOperand extends Operand, TPhiOperand {
 class MemoryOperand extends Operand {
   MemoryOperand() {
     exists(getMemoryAccess())
+  }
+
+  override Type getType() {
+    result = getDefinitionInstruction().getResultType()
+  }
+
+  override predicate isGLValue() {
+    getDefinitionInstruction().isGLValue()
+  }
+
+  override int getSize() {
+    result = getDefinitionInstruction().getResultSize()
+  }
+}
+
+/**
+ * An operand that reads a value from a register, rather than from memory.
+ */
+class RegisterOperand extends Operand {
+  RegisterOperand() {
+    not exists(getMemoryAccess())
+  }
+
+  override Type getType() {
+    result = getDefinitionInstruction().getResultType()
+  }
+
+  override predicate isGLValue() {
+    getDefinitionInstruction().isGLValue()
+  }
+
+  override int getSize() {
+    result = getDefinitionInstruction().getResultSize()
   }
 }
 

@@ -7,6 +7,11 @@ private import AliasedSSA
  */
 class PropertyProvider extends IRPropertyProvider {
   override string getInstructionProperty(Instruction instruction, string key) {
-    key = "ResultMemoryAccess" and result = getResultMemoryAccess(instruction).toString()
+    key = "ResultMemoryAccess" and result = getResultMemoryAccess(instruction).toString() or
+    exists(MemoryOperand operand |
+      operand = instruction.getAnOperand() and
+      key = "OperandMemoryAccess(" + operand.toString() + ")" and
+      result = getOperandMemoryAccess(operand).toString()
+    )
   }
 }

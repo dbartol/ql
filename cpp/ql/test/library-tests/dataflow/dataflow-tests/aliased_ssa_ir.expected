@@ -30,7 +30,6 @@ ERROR: Could not resolve type UnaryOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\c
 ERROR: Could not resolve type UnaryOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:877,30-42)
 ERROR: Could not resolve type UnmodeledUseOperand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:455,31-50)
 ERROR: getDefinitionInstruction() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:122,13-37)
-ERROR: getDefinitionInstruction() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\dataflow\internal\DataFlowUtil.qll:130,42-66)
 ERROR: getDefinitionInstruction() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:410,12-36)
 ERROR: getDumpSortOrder() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:280,54-70)
 ERROR: getDumpString() cannot be resolved for type Operand (C:\Src\Code_1\ql\cpp\ql\src\semmle\code\cpp\ir\implementation\aliased_ssa\Instruction.qll:280,15-28)
