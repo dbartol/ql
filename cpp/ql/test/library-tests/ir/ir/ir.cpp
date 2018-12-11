@@ -1044,4 +1044,9 @@ int UnreachableIf(bool b) {
   }
 }
 
+int Lambdas(int x) {
+  auto f = [=](int y) { return x + y; };
+  return f(3);
+}
+
 // semmle-extractor-options: -std=c++17

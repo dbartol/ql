@@ -118,6 +118,10 @@ private predicate isInvalidFunction(Function func) {
     // Expression missing a type.
     expr.getEnclosingFunction() = func and
     not exists(expr.getType())
+  ) or
+  exists(LambdaExpression lambda |
+    // Lambdas not yet implemented.
+    lambda.getEnclosingFunction() = func
   )
 }
 

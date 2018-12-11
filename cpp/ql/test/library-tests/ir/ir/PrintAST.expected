@@ -1,3 +1,40 @@
+ir.cpp:
+# 1048| 
+# 1048|   0: constructor init of field x
+# 1048|       Type = int
+# 1048|       ValueCategory = prvalue
+# 1048|     0: Unknown literal
+# 1048|         Type = int
+# 1048|         ValueCategory = prvalue
+# 1048| 
+#-----|   0: p#0
+#-----|       Type = const lambda [] type at line 1048, col. 12 &
+# 1048| 
+#-----|   0: p#0
+#-----|       Type = lambda [] type at line 1048, col. 12 &&
+# 1048| 
+#-----|   0: p#0
+#-----|       Type = const lambda [] type at line 1048, col. 12 &
+# 1048| 
+# 1048| 
+# 1048|   0: y
+# 1048|       Type = int
+# 1048| { ... }
+# 1048|   0: return ...
+# 1048| { ... }
+# 1048|   0: return ...
+# 1048|     0: ... + ...
+# 1048|         Type = int
+# 1048|         ValueCategory = prvalue
+#-----|       0: x
+#-----|           Type = int
+#-----|           ValueCategory = prvalue(load)
+#-----|         -1: this
+#-----|             Type = const lambda [] type at line 1048, col. 12 *
+#-----|             ValueCategory = prvalue(load)
+# 1048|       1: y
+# 1048|           Type = int
+# 1048|           ValueCategory = prvalue(load)
 #-----| __va_list_tag::operator=(__va_list_tag &&) -> __va_list_tag &
 #-----|   params: 
 #-----|     0: p#0
@@ -6728,3 +6765,36 @@ ir.cpp:
 # 1042|                   Type = int
 # 1042|                   Value = 1
 # 1042|                   ValueCategory = prvalue
+# 1047| Lambdas(int) -> int
+# 1047|   params: 
+# 1047|     0: x
+# 1047|         Type = int
+# 1047|   body: { ... }
+# 1048|     0: declaration
+# 1048|       0: definition of f
+# 1048|           Type = decltype([...](...){...})
+# 1048|         init: initializer for f
+# 1048|           expr: [...](...){...}
+# 1048|               Type = decltype([...](...){...})
+# 1048|               ValueCategory = prvalue
+# 1048|             0: {...}
+# 1048|                 Type = decltype([...](...){...})
+# 1048|                 ValueCategory = prvalue
+#-----|               .x: x
+#-----|                   Type = int
+#-----|                   ValueCategory = prvalue(load)
+# 1049|     1: return ...
+# 1049|       0: call to operator()
+# 1049|           Type = int
+# 1049|           ValueCategory = prvalue
+# 1049|         -1: (const lambda [] type at line 1048, col. 12)...
+# 1049|             Conversion = glvalue conversion
+# 1049|             Type = const lambda [] type at line 1048, col. 12
+# 1049|             ValueCategory = lvalue
+# 1049|           expr: f
+# 1049|               Type = decltype([...](...){...})
+# 1049|               ValueCategory = lvalue
+# 1049|         0: 3
+# 1049|             Type = int
+# 1049|             Value = 3
+# 1049|             ValueCategory = prvalue
