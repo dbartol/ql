@@ -302,7 +302,7 @@ class Instruction extends Construction::TInstruction {
       result = type
   }
 
-  private string getResultTypeString() {
+  string getResultTypeString() {
     exists(string valcat |
       valcat = getValueCategoryString(getResultType().toString()) and
       if (getResultType() instanceof UnknownType and

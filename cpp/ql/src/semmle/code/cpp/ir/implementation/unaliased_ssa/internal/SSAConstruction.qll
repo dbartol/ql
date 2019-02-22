@@ -2,6 +2,7 @@ import SSAConstructionInternal
 import cpp
 private import semmle.code.cpp.ir.implementation.Opcode
 private import semmle.code.cpp.ir.internal.OperandTag
+private import semmle.code.cpp.ir.internal.Overlap
 private import NewIR
 
 private class OldBlock = Reachability::ReachableBlock;
@@ -39,6 +40,26 @@ cached private module Cached {
     result = getNewInstruction(instr)
   }
 
+  pragma[inline]
+  bindingset[defIndex, defLocation]
+  private Instruction getDefinitionOrChiInstruction(OldBlock defBlock, int defIndex, Alias::MemoryLocation defLocation,
+      Overlap overlap) {
+    (
+      defIndex >= 0 and
+      exists(OldInstruction oldInstr |
+        oldInstr = defBlock.getInstruction(defIndex) and
+        if overlap instanceof MayPartiallyOverlap then
+          result = Chi(oldInstr)
+        else
+          result = getNewInstruction(oldInstr)
+      )
+    ) or
+    (
+      defIndex < 0 and
+      result = Phi(defBlock, defLocation)
+    )
+  }
+
   private IRVariable getNewIRVariable(OldIR::IRVariable var) {
     // This is just a type cast. Both classes derive from the same newtype.
     result = var
@@ -48,8 +69,8 @@ cached private module Cached {
     WrappedInstruction(OldInstruction oldInstruction) {
       not oldInstruction instanceof OldIR::PhiInstruction
     } or
-    Phi(OldBlock block, Alias::VirtualVariable vvar) {
-      hasPhiNode(vvar, block)
+    Phi(OldBlock block, Alias::MemoryLocation defLocation) {
+      definitionHasPhiNode(defLocation, block)
     } or
     Chi(OldInstruction oldInstruction) {
       not oldInstruction instanceof OldIR::PhiInstruction and
@@ -73,33 +94,41 @@ cached private module Cached {
   }
 
   cached predicate hasModeledMemoryResult(Instruction instruction) {
-    exists(Alias::getResultMemoryAccess(getOldInstruction(instruction))) or
+    exists(Alias::getResultMemoryLocation(getOldInstruction(instruction))) or
     instruction instanceof PhiInstruction or  // Phis always have modeled results
     instruction instanceof ChiInstruction  // Chis always have modeled results
   }
 
-  cached Instruction getInstructionOperandDefinition(Instruction instruction, OperandTag tag) {
-    exists(OldInstruction oldInstruction, OldIR::NonPhiOperand oldOperand |
+  cached Instruction getRegisterOperandDefinition(Instruction instruction, RegisterOperandTag tag) {
+    exists(OldInstruction oldInstruction, OldIR::RegisterOperand oldOperand |
       oldInstruction = getOldInstruction(instruction) and
       oldOperand = oldInstruction.getAnOperand() and
       tag = oldOperand.getOperandTag() and
-      if oldOperand instanceof OldIR::MemoryOperand then (
+      result = getNewInstruction(oldOperand.getDefinitionInstruction())
+    )
+  }
+
+  cached Instruction getMemoryOperandDefinition(Instruction instruction, MemoryOperandTag tag, Overlap overlap) {
+    exists(OldInstruction oldInstruction, OldIR::NonPhiMemoryOperand oldOperand |
+      oldInstruction = getOldInstruction(instruction) and
+      oldOperand = oldInstruction.getAnOperand() and
+      tag = oldOperand.getOperandTag() and
+      (
         (
-          if exists(Alias::getOperandMemoryAccess(oldOperand)) then (
-            exists(OldBlock useBlock, int useRank, Alias::VirtualVariable vvar,
-              OldBlock defBlock, int defRank, int defIndex |
-              vvar = Alias::getOperandMemoryAccess(oldOperand).getVirtualVariable() and
-              hasDefinitionAtRank(vvar, defBlock, defRank, defIndex) and
-              hasUseAtRank(vvar, useBlock, useRank, oldInstruction) and
-              definitionReachesUse(vvar, defBlock, defRank, useBlock, useRank) and
-              if defIndex >= 0 then
-                result = getNewFinalInstruction(defBlock.getInstruction(defIndex))
-              else
-                result = Phi(defBlock, vvar)
+          if exists(Alias::getOperandMemoryLocation(oldOperand)) then (
+            exists(OldBlock useBlock, int useRank, Alias::MemoryLocation useLocation, Alias::MemoryLocation defLocation,
+                OldBlock defBlock, int defRank, int defIndex |
+              useLocation = Alias::getOperandMemoryLocation(oldOperand) and
+              hasDefinitionAtRank(useLocation, defLocation, defBlock, defRank, defIndex) and
+              hasUseAtRank(useLocation, useBlock, useRank, oldInstruction) and
+              definitionReachesUse(useLocation, defBlock, defRank, useBlock, useRank) and
+              overlap = Alias::getOverlap(defLocation, useLocation) and
+              result = getDefinitionOrChiInstruction(defBlock, defIndex, defLocation, overlap)
             )
           )
           else (
-            result = instruction.getEnclosingFunctionIR().getUnmodeledDefinitionInstruction()
+            result = instruction.getEnclosingFunctionIR().getUnmodeledDefinitionInstruction() and
+            overlap instanceof MustTotallyOverlap
           )
         ) or
         // Connect any definitions that are not being modeled in SSA to the
@@ -108,24 +137,26 @@ cached private module Cached {
           instruction instanceof UnmodeledUseInstruction and
           tag instanceof UnmodeledUseOperandTag and
           oldDefinition = oldOperand.getDefinitionInstruction() and
-          not exists(Alias::getResultMemoryAccess(oldDefinition)) and
-          result = getNewInstruction(oldDefinition)
+          not exists(Alias::getResultMemoryLocation(oldDefinition)) and
+          result = getNewInstruction(oldDefinition) and
+          overlap instanceof MustTotallyOverlap
         )
       )
-      else 
-        result = getNewInstruction(oldOperand.getDefinitionInstruction())
     ) or
     instruction = Chi(getOldInstruction(result)) and
-    tag instanceof ChiPartialOperandTag
+    tag instanceof ChiPartialOperandTag and
+    overlap instanceof MustExactlyOverlap
     or
     exists(FunctionIR f |
       tag instanceof UnmodeledUseOperandTag and
       result = f.getUnmodeledDefinitionInstruction() and
-      instruction = f.getUnmodeledUseInstruction()
+      instruction = f.getUnmodeledUseInstruction() and
+      overlap instanceof MustTotallyOverlap
     )
     or
     tag instanceof ChiTotalOperandTag and
-    result = getChiInstructionTotalOperand(instruction)
+    result = getChiInstructionTotalOperand(instruction) and
+    overlap instanceof MustExactlyOverlap
   }
 
   cached Type getInstructionOperandType(Instruction instr, TypedOperandTag tag) {
@@ -148,20 +179,18 @@ cached private module Cached {
     )
   }
 
-  cached Instruction getPhiInstructionOperandDefinition(PhiInstruction instr,
-      IRBlock newPredecessorBlock) {
-    exists(Alias::VirtualVariable vvar, OldBlock phiBlock,
+  cached Instruction getPhiOperandDefinition(PhiInstruction instr,
+      IRBlock newPredecessorBlock, Overlap overlap) {
+    exists(Alias::MemoryLocation useLocation, Alias::MemoryLocation defLocation, OldBlock phiBlock,
         OldBlock defBlock, int defRank, int defIndex, OldBlock predBlock |
-      hasPhiNode(vvar, phiBlock) and
+      definitionHasPhiNode(useLocation, phiBlock) and
       predBlock = phiBlock.getAFeasiblePredecessor() and
-      instr = Phi(phiBlock, vvar) and
+      instr = Phi(phiBlock, useLocation) and
       newPredecessorBlock = getNewBlock(predBlock) and
-      hasDefinitionAtRank(vvar, defBlock, defRank, defIndex) and
-      definitionReachesEndOfBlock(vvar, defBlock, defRank, predBlock) and
-      if defIndex >= 0 then
-        result = getNewFinalInstruction(defBlock.getInstruction(defIndex))
-      else
-        result = Phi(defBlock, vvar)
+      hasDefinitionAtRank(useLocation, defLocation, defBlock, defRank, defIndex) and
+      definitionReachesEndOfBlock(useLocation, defBlock, defRank, predBlock) and
+      overlap = Alias::getOverlap(defLocation, useLocation) and
+      result = getDefinitionOrChiInstruction(defBlock, defIndex, defLocation, overlap)
     )
   }
 
@@ -169,8 +198,8 @@ cached private module Cached {
     exists(Alias::VirtualVariable vvar, OldInstruction oldInstr, OldBlock defBlock,
         int defRank, int defIndex, OldBlock useBlock, int useRank |
       chiInstr = Chi(oldInstr) and
-      vvar = Alias::getResultMemoryAccess(oldInstr).getVirtualVariable() and
-      hasDefinitionAtRank(vvar, defBlock, defRank, defIndex) and
+      vvar = Alias::getResultMemoryLocation(oldInstr).getVirtualVariable() and
+      hasDefinitionAtRank(vvar, _, defBlock, defRank, defIndex) and
       hasUseAtRank(vvar, useBlock, useRank, oldInstr) and
       definitionReachesUse(vvar, defBlock, defRank, useBlock, useRank) and
       if defIndex >= 0 then
@@ -274,9 +303,9 @@ cached private module Cached {
       isGLValue = false
     )
     or
-    exists(Alias::VirtualVariable vvar |
-      instruction = Phi(_, vvar) and
-      type = vvar.getType() and
+    exists(Alias::MemoryLocation location |
+      instruction = Phi(_, location) and
+      type = location.getType() and
       isGLValue = false
     )
     or
@@ -372,183 +401,314 @@ cached private module Cached {
       result = getNewInstruction(oldInstruction)
     )
   }
+}
 
-  private predicate ssa_variableUpdate(Alias::VirtualVariable vvar,
-      OldBlock block, int index, OldInstruction instr) {
-    block.getInstruction(index) = instr and
-    Alias::getResultMemoryAccess(instr).getVirtualVariable() = vvar
-  }
+private predicate hasChiNode(Alias::VirtualVariable vvar, OldInstruction def) {
+  exists(Alias::MemoryLocation defLocation |
+    defLocation = Alias::getResultMemoryLocation(def) and
+    defLocation.getVirtualVariable() = vvar and
+    defLocation != vvar  // ??? How to handle total definitions that aren't the virtual variable itself?
+  )
+}
 
-  private predicate hasDefinition(Alias::VirtualVariable vvar, OldBlock block, int index) {
+/**
+  * Gets the rank index of a hyphothetical use one instruction past the end of
+  * the block. This index can be used to determine if a definition reaches the
+  * end of the block, even if the definition is the last instruction in the
+  * block.
+  */
+private int exitRank(Alias::MemoryLocation useLocation, OldBlock block) {
+  result = max(int rankIndex | defUseRank(useLocation, block, rankIndex, _)) + 1
+}
+
+/**
+  * Holds if a definition that overlaps `useLocation` at (`defBlock`, `defRank`) reaches the use of `useLocation` at
+  * (`useBlock`, `useRank`) without any intervening definitions that overlap `useLocation`, where `defBlock` and
+  * `useBlock` are the same block.
+  */
+private predicate definitionReachesUseWithinBlock(Alias::MemoryLocation useLocation, OldBlock defBlock,
+    int defRank, OldBlock useBlock, int useRank) {
+  defBlock = useBlock and
+  hasDefinitionAtRank(useLocation, _, defBlock, defRank, _) and
+  hasUseAtRank(useLocation, useBlock, useRank, _) and
+  definitionReachesRank(useLocation, defBlock, defRank, useRank)
+}
+
+/**
+  * Holds if a definition that overlaps `useLocation` at (`defBlock`, `defRank`) reaches the use of `useLocation` at
+  * (`useBlock`, `useRank`) without any intervening definitions that overlap `useLocation`.
+  */
+predicate definitionReachesUse(Alias::MemoryLocation useLocation, OldBlock defBlock,
+    int defRank, OldBlock useBlock, int useRank) {
+  hasUseAtRank(useLocation, useBlock, useRank, _) and
+  (
+    definitionReachesUseWithinBlock(useLocation, defBlock, defRank, useBlock,
+      useRank) or
     (
-      hasPhiNode(vvar, block) and
-      index = -1
+      definitionReachesEndOfBlock(useLocation, defBlock, defRank,
+        useBlock.getAFeasiblePredecessor()) and
+      not definitionReachesUseWithinBlock(useLocation, useBlock, _, useBlock, useRank)
+    )
+  )
+}
+
+/**
+  * Gets the set of memory accesses that, when used as a definition, may overlap the memory access specified by
+  * `useLocation`.
+  */
+private Alias::MemoryLocation getDefiningLocations(Alias::MemoryLocation useLocation) {
+  exists(Alias::getOverlap(result, useLocation))
+}
+
+/**
+  * Holds if the definition that overlaps `useLocation` at `(block, defRank)` reaches the rank
+  * index `reachesRank` in block `block`.
+  */
+private predicate definitionReachesRank(Alias::MemoryLocation useLocation, OldBlock block, int defRank,
+    int reachesRank) {
+  hasDefinitionAtRank(useLocation, _, block, defRank, _) and
+  reachesRank <= exitRank(useLocation, block) and  // Without this, the predicate would be infinite.
+  (
+    // The def always reaches the next use, even if there is also a def on the
+    // use instruction.
+    reachesRank = defRank + 1 or
+    (
+      // If the def reached the previous rank, it also reaches the current rank,
+      // unless there was another def at the previous rank.
+      definitionReachesRank(useLocation, block, defRank, reachesRank - 1) and
+      not hasDefinitionAtRank(useLocation, _, block, reachesRank - 1, _)
+    )
+  )
+}
+
+/**
+  * Holds if the definition that overlaps `useLocation` at `(defBlock, defRank)` reaches the end of
+  * block `block` without any intervening definitions that overlap `useLocation`.
+  */
+private predicate definitionReachesEndOfBlock(Alias::MemoryLocation useLocation, OldBlock defBlock,
+    int defRank, OldBlock block) {
+  hasDefinitionAtRank(useLocation, _, defBlock, defRank, _) and
+  (
+    (
+      // If we're looking at the def's own block, just see if it reaches the exit
+      // rank of the block.
+      block = defBlock and
+      locationLiveOnExitFromBlock(useLocation, defBlock) and
+      definitionReachesRank(useLocation, defBlock, defRank, exitRank(useLocation, defBlock))
     ) or
-    exists(Alias::MemoryAccess access, OldInstruction def |
-      access = Alias::getResultMemoryAccess(def) and
-      block.getInstruction(index) = def and
-      vvar = access.getVirtualVariable()
+    exists(OldBlock idom |
+      definitionReachesEndOfBlock(useLocation, defBlock, defRank, idom) and
+      noDefinitionsSinceIDominator(useLocation, idom, block)
     )
-  }
+  )
+}
 
-  private predicate defUseRank(Alias::VirtualVariable vvar, OldBlock block, int rankIndex, int index) {
-    index = rank[rankIndex](int j | hasDefinition(vvar, block, j) or hasUse(vvar, block, j, _))
-  }
+pragma[noinline]
+private predicate noDefinitionsSinceIDominator(Alias::MemoryLocation useLocation, OldBlock idom,
+    OldBlock block) {
+  Dominance::blockImmediatelyDominates(idom, block) and // It is sufficient to traverse the dominator graph, cf. discussion above.
+  locationLiveOnExitFromBlock(useLocation, block) and
+  not hasDefinition(useLocation, _, block, _)
+}
 
-  private predicate hasUse(Alias::VirtualVariable vvar, OldBlock block, int index,
-      OldInstruction use) {
-    exists(Alias::MemoryAccess access |
-      (
-        access = Alias::getOperandMemoryAccess(use.getAnOperand())
-        or
+private predicate locationLiveOnEntryToBlock(Alias::MemoryLocation useLocation, OldBlock block) {
+  exists(int firstAccess |
+    hasUse(useLocation, block, firstAccess, _) and
+    firstAccess = min(int index |
+      hasUse(useLocation, block, index, _)
+      or
+      hasNonPhiDefinition(useLocation, _, block, index)
+    )
+  )
+  or
+  (locationLiveOnExitFromBlock(useLocation, block) and not hasNonPhiDefinition(useLocation, _, block, _))
+}
+
+pragma[noinline]
+private predicate locationLiveOnExitFromBlock(Alias::MemoryLocation useLocation, OldBlock block) {
+  locationLiveOnEntryToBlock(useLocation, block.getAFeasibleSuccessor())
+}
+
+private predicate definitionHasUse(Alias::MemoryLocation defLocation, OldBlock block, int index) {
+  exists(OldInstruction use, Alias::MemoryLocation useLocation |
+    block.getInstruction(index) = use and
+    useLocation = Alias::getOperandMemoryLocation(use.getAnOperand()) and
+    if defLocation instanceof Alias::VirtualVariable then (
+      // For a virtual variable, any use of a location that is a member of the virtual variable counts as a use.
+      defLocation = useLocation.getVirtualVariable() or
+      exists(Alias::MemoryLocation partialDefLocation |
+        partialDefLocation = Alias::getResultMemoryLocation(use) and
         /*
-         * a partial write to a virtual variable is going to generate a use of that variable when
-         * Chi nodes are inserted, so we need to mark it as a use in the old IR
-         */
-        access = Alias::getResultMemoryAccess(use) and
-        access.isPartialMemoryAccess()
-      ) and
-      block.getInstruction(index) = use and
-      vvar = access.getVirtualVariable()
-    )
-  }
-
-  private predicate variableLiveOnEntryToBlock(Alias::VirtualVariable vvar, OldBlock block) {
-    exists(int firstAccess |
-      hasUse(vvar, block, firstAccess, _) and
-      firstAccess = min(int index |
-          hasUse(vvar, block, index, _)
-          or
-          ssa_variableUpdate(vvar, block, index, _)
-        )
-    )
-    or
-    (variableLiveOnExitFromBlock(vvar, block) and not ssa_variableUpdate(vvar, block, _, _))
-  }
-
-  pragma[noinline]
-  private predicate variableLiveOnExitFromBlock(Alias::VirtualVariable vvar, OldBlock block) {
-    variableLiveOnEntryToBlock(vvar, block.getAFeasibleSuccessor())
-  }
-
-  /**
-   * Gets the rank index of a hyphothetical use one instruction past the end of
-   * the block. This index can be used to determine if a definition reaches the
-   * end of the block, even if the definition is the last instruction in the
-   * block.
-   */
-  private int exitRank(Alias::VirtualVariable vvar, OldBlock block) {
-    result = max(int rankIndex | defUseRank(vvar, block, rankIndex, _)) + 1
-  }
-
-  private predicate hasDefinitionAtRank(Alias::VirtualVariable vvar, OldBlock block, int rankIndex,
-      int instructionIndex) {
-    hasDefinition(vvar, block, instructionIndex) and
-    defUseRank(vvar, block, rankIndex, instructionIndex)
-  }
-
-  private predicate hasUseAtRank(Alias::VirtualVariable vvar, OldBlock block, int rankIndex,
-      OldInstruction use) {
-    exists(int index |
-      hasUse(vvar, block, index, use) and
-      defUseRank(vvar, block, rankIndex, index)
-    )
-  }
-
-  /**
-    * Holds if the definition of `vvar` at `(block, defRank)` reaches the rank
-    * index `reachesRank` in block `block`.
-    */
-  private predicate definitionReachesRank(Alias::VirtualVariable vvar, OldBlock block, int defRank,
-      int reachesRank) {
-    hasDefinitionAtRank(vvar, block, defRank, _) and
-    reachesRank <= exitRank(vvar, block) and  // Without this, the predicate would be infinite.
-    (
-      // The def always reaches the next use, even if there is also a def on the
-      // use instruction.
-      reachesRank = defRank + 1 or
-      (
-        // If the def reached the previous rank, it also reaches the current rank,
-        // unless there was another def at the previous rank.
-        definitionReachesRank(vvar, block, defRank, reachesRank - 1) and
-        not hasDefinitionAtRank(vvar, block, reachesRank - 1, _)
+          * a partial write to a virtual variable is going to generate a use of that variable when
+          * Chi nodes are inserted, so we need to mark it as a use in the old IR
+          */
+        partialDefLocation.getVirtualVariable() = defLocation and
+        partialDefLocation != defLocation // ??? Should this be just a check for a partial write, to handle an exact overlap with a different type?
       )
     )
-  }
+    else (
+      // For other locations, only an exactly-overlapping use of the same location counts as a use.
+      defLocation = useLocation and
+      Alias::getOverlap(defLocation, useLocation) instanceof MustExactlyOverlap
+    )
+  )
+}
 
-  /**
-   * Holds if the definition of `vvar` at `(defBlock, defRank)` reaches the end of
-   * block `block`.
-   */
-  private predicate definitionReachesEndOfBlock(Alias::VirtualVariable vvar, OldBlock defBlock,
-      int defRank, OldBlock block) {
-    hasDefinitionAtRank(vvar, defBlock, defRank, _) and
-    (
-      (
-        // If we're looking at the def's own block, just see if it reaches the exit
-        // rank of the block.
-        block = defBlock and
-        variableLiveOnExitFromBlock(vvar, defBlock) and
-        definitionReachesRank(vvar, defBlock, defRank, exitRank(vvar, defBlock))
-      ) or
-      exists(OldBlock idom |
-        definitionReachesEndOfBlock(vvar, defBlock, defRank, idom) and
-        noDefinitionsSinceIDominator(vvar, idom, block)
+private predicate definitionHasRedefinition(Alias::MemoryLocation defLocation, OldBlock block, int index) {
+  exists(OldInstruction redef, Alias::MemoryLocation redefLocation |
+    block.getInstruction(index) = redef and
+    redefLocation = Alias::getResultMemoryLocation(redef) and
+    if defLocation instanceof Alias::VirtualVariable then (
+      // For a virtual variable, the definition may be consumed by any use of a location that is a member of the
+      // virtual variable. Thus, the definition is live until a subsequent redefinition of the entire virtual
+      // variable.
+      redefLocation = defLocation  // ??? Should probably include all total definitions of the virtual variable
+    )
+    else (
+      // For other locations, the definition may only be consumed by an exactly-overlapping use of the same location.
+      // Thus, the definition is live until a subsequent definition of any location that may overlap the original
+      // definition location.
+      redefLocation = getDefiningLocations(defLocation)
+    )
+  )
+}
+
+/**
+  * Holds if the definition `defLocation` is live on entry to block `block`. The definition is live if there is at
+  * least one use of that definition before any intervening instruction that redefines the definition location.
+  */
+private predicate definitionLiveOnEntryToBlock(Alias::MemoryLocation defLocation, OldBlock block) {
+  exists(int firstAccess |
+    definitionHasUse(defLocation, block, firstAccess) and
+    firstAccess = min(int index |
+        definitionHasUse(defLocation, block, index)
+        or
+        definitionHasRedefinition(defLocation, block, index)
       )
+  )
+  or
+  (definitionLiveOnExitFromBlock(defLocation, block) and not definitionHasRedefinition(defLocation, block, _))
+}
+
+pragma[noinline]
+private predicate definitionLiveOnExitFromBlock(Alias::MemoryLocation defLocation, OldBlock block) {
+  definitionLiveOnEntryToBlock(defLocation, block.getAFeasibleSuccessor())
+}
+
+/**
+  * Holds if the virtual variable `vvar` has a definition in block `block`, either because of an existing instruction
+  * or because of a Phi node.
+  */
+private predicate definitionHasDefinitionInBlock(Alias::MemoryLocation defLocation, OldBlock block) {
+  definitionHasPhiNode(defLocation, block) or
+  exists(OldInstruction def |
+    defLocation = Alias::getResultMemoryLocation(def) and
+    def.getBlock() = block
+  )
+}
+
+private predicate definitionHasPhiNode(Alias::MemoryLocation defLocation, OldBlock phiBlock) {
+  exists(OldBlock defBlock |
+    phiBlock = Dominance::getDominanceFrontier(defBlock) and
+    definitionHasDefinitionInBlock(defLocation, defBlock) and
+    /* We can also eliminate those nodes where the definition is not live on any incoming edge */
+    definitionLiveOnEntryToBlock(defLocation, phiBlock)
+  )
+}
+
+/** 
+  * Holds if there is a definition at index `index` in block `block` that overlaps memory location `useLocation`.
+  * This predicate does not include definitions for Phi nodes.
+  */
+private predicate hasNonPhiDefinition(Alias::MemoryLocation useLocation, Alias::MemoryLocation defLocation,
+    OldBlock block, int index) {
+  exists(OldInstruction def |
+    defLocation = Alias::getResultMemoryLocation(def) and
+    block.getInstruction(index) = def and
+    defLocation = getDefiningLocations(useLocation)
+  )
+}
+
+/** 
+  * Holds if there is a definition at index `index` in block `block` that overlaps memory location `useLocation`.
+  * This predicate includes definitions for Phi nodes (at index -2 for virtual variables, or index -1 for precise
+  * locations).
+  */
+private predicate hasDefinition(Alias::MemoryLocation useLocation, Alias::MemoryLocation defLocation, OldBlock block,
+    int index) {
+  (
+    // If there is a Phi node for the use location itself, treat that as a definition at index -1.
+    not useLocation instanceof Alias::VirtualVariable and
+    definitionHasPhiNode(useLocation, block) and
+    index = -1
+  ) or
+  (
+    // If there is a Phi node for the virtual variable of the use location, treat that as a definition at index -2,
+    // which makes it occur before any more-specific Phi node for the exact use location.
+    definitionHasPhiNode(useLocation.getVirtualVariable(), block) and
+    index = -2
+  ) or
+  hasNonPhiDefinition(useLocation, defLocation, block, index)
+}
+
+/**
+  * Holds if there is a definition at index `index` in block `block` that overlaps memory location `useLocation`.
+  * `rankIndex` is the rank of the definition as computed by `defUseRank()`.
+  */
+predicate hasDefinitionAtRank(Alias::MemoryLocation useLocation, Alias::MemoryLocation defLocation,
+    OldBlock block, int rankIndex, int instructionIndex) {
+  hasDefinition(useLocation, defLocation, block, instructionIndex) and
+  defUseRank(useLocation, block, rankIndex, instructionIndex)
+}
+
+/**
+  * Holds if there is a use of `useLocation` on instruction `use` at index `index` in block `block`.
+  */
+private predicate hasUse(Alias::MemoryLocation useLocation, OldBlock block, int index,
+    OldInstruction use) {
+  block.getInstruction(index) = use and
+  (
+    useLocation = Alias::getOperandMemoryLocation(use.getAnOperand()) or
+    exists(Alias::MemoryLocation defLocation |
+      defLocation = Alias::getResultMemoryLocation(use) and
+      /*
+        * a partial write to a virtual variable is going to generate a use of that variable when
+        * Chi nodes are inserted, so we need to mark it as a use in the old IR
+        */
+      defLocation.getVirtualVariable() = useLocation and
+      defLocation != useLocation  // ??? Should this be just a check for a partial write, to handle an exact overlap with a different type?
     )
-  }
+  )
+}
 
-  pragma[noinline]
-  private predicate noDefinitionsSinceIDominator(Alias::VirtualVariable vvar, OldBlock idom,
-      OldBlock block) {
-    Dominance::blockImmediatelyDominates(idom, block) and // It is sufficient to traverse the dominator graph, cf. discussion above.
-    variableLiveOnExitFromBlock(vvar, block) and
-    not hasDefinition(vvar, block, _)
-  }
+/**
+  * Holds if there is a use of memory location `useLocation` on instruction `use` in block `block`. `rankIndex` is the
+  * rank of the use use as computed by `defUseRank`.
+  */
+predicate hasUseAtRank(Alias::MemoryLocation useLocation, OldBlock block, int rankIndex, OldInstruction use) {
+  exists(int index |
+    hasUse(useLocation, block, index, use) and
+    defUseRank(useLocation, block, rankIndex, index)
+  )
+}
 
-  private predicate definitionReachesUseWithinBlock(Alias::VirtualVariable vvar, OldBlock defBlock,
-      int defRank, OldBlock useBlock, int useRank) {
-    defBlock = useBlock and
-    hasDefinitionAtRank(vvar, defBlock, defRank, _) and
-    hasUseAtRank(vvar, useBlock, useRank, _) and
-    definitionReachesRank(vvar, defBlock, defRank, useRank)
-  }
+/**
+  * Holds if there is a definition at index `index` in block `block` that overlaps memory location `useLocation`, or
+  * a use of `useLocation` at index `index` in block `block`. `rankIndex` is the sequence number of the definition or
+  * use within `block`, counting only uses of `useLocation` and definitions that overlap `useLocation`.
+  */
+private predicate defUseRank(Alias::MemoryLocation useLocation, OldBlock block, int rankIndex, int index) {
+  index = rank[rankIndex](int j | hasDefinition(useLocation, _, block, j) or hasUse(useLocation, block, j, _))
+}
 
-  private predicate definitionReachesUse(Alias::VirtualVariable vvar, OldBlock defBlock,
-      int defRank, OldBlock useBlock, int useRank) {
-    hasUseAtRank(vvar, useBlock, useRank, _) and
-    (
-      definitionReachesUseWithinBlock(vvar, defBlock, defRank, useBlock,
-        useRank) or
-      (
-        definitionReachesEndOfBlock(vvar, defBlock, defRank,
-          useBlock.getAFeasiblePredecessor()) and
-        not definitionReachesUseWithinBlock(vvar, useBlock, _, useBlock, useRank)
-      )
-    )
-  }
-
-  private predicate hasFrontierPhiNode(Alias::VirtualVariable vvar, OldBlock phiBlock) {
-    exists(OldBlock defBlock |
-      phiBlock = Dominance::getDominanceFrontier(defBlock) and
-      hasDefinition(vvar, defBlock, _) and
-      /* We can also eliminate those nodes where the variable is not live on any incoming edge */
-      variableLiveOnEntryToBlock(vvar, phiBlock)
-    )
-  }
-
-  private predicate hasPhiNode(Alias::VirtualVariable vvar, OldBlock phiBlock) {
-    hasFrontierPhiNode(vvar, phiBlock)
-    //or ssa_sanitized_custom_phi_node(vvar, block)
-  }
-  
-  private predicate hasChiNode(Alias::VirtualVariable vvar, OldInstruction def) {
-    exists(Alias::MemoryAccess ma |
-      ma = Alias::getResultMemoryAccess(def) and
-      ma.isPartialMemoryAccess() and
-      ma.getVirtualVariable() = vvar
-    )
-  }
+predicate getDebugChiInstructionTotalOperand(OldInstruction oldInstr, OldBlock defBlock, int defIndex) {
+  exists(Alias::VirtualVariable vvar, int defRank, OldBlock useBlock, int useRank |
+    hasChiNode(_, oldInstr) and
+    vvar = Alias::getResultMemoryLocation(oldInstr).getVirtualVariable() and
+    hasDefinitionAtRank(vvar, _, defBlock, defRank, defIndex) and
+    hasUseAtRank(vvar, useBlock, useRank, oldInstr) and
+    definitionReachesUse(vvar, defBlock, defRank, useBlock, useRank)
+  )
 }
 
 import CachedForDebugging
@@ -562,9 +722,9 @@ cached private module CachedForDebugging {
       oldInstr = getOldInstruction(instr) and
       result = "NonSSA: " + oldInstr.getUniqueId()
     ) or
-    exists(Alias::VirtualVariable vvar, OldBlock phiBlock |
-      instr = Phi(phiBlock, vvar) and
-      result = "Phi Block(" + phiBlock.getUniqueId() + "): " + vvar.getUniqueId() 
+    exists(Alias::MemoryLocation location, OldBlock phiBlock |
+      instr = Phi(phiBlock, location) and
+      result = "Phi Block(" + phiBlock.getUniqueId() + "): " + location.getUniqueId() 
     ) or
     (
       instr = Unreached(_) and

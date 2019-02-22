@@ -1,6 +1,20 @@
 missingOperand
+| ssa.cpp:81:3:81:8 | Chi: call to Escape | ChiTotal |
+| ssa.cpp:92:3:92:8 | Chi: call to Escape | ChiTotal |
+| ssa.cpp:96:18:96:18 | Chi: y | ChiTotal |
+| ssa.cpp:101:15:101:15 | Chi: x | ChiTotal |
+| ssa.cpp:101:18:101:18 | Chi: y | ChiTotal |
+| ssa.cpp:103:3:103:8 | Chi: call to Escape | ChiTotal |
+| ssa.cpp:107:12:107:14 | Chi: {...} | ChiTotal |
+| ssa.cpp:109:5:109:12 | Chi: ... = ... | ChiTotal |
+| ssa.cpp:112:5:112:12 | Chi: ... = ... | ChiTotal |
 unexpectedOperand
 duplicateOperand
+| ssa.cpp:28:13:28:13 | Load: x | Load |
+| ssa.cpp:28:20:28:20 | Load: y | Load |
+| ssa.cpp:69:10:69:12 | Load: ... -- | Load |
+| ssa.cpp:70:7:70:9 | Load: ... ++ | Load |
+| ssa.cpp:115:13:115:13 | Load: a | Load |
 missingPhiOperand
 missingOperandType
 instructionWithoutSuccessor
