@@ -323,6 +323,10 @@ class ChiTotalOperandTag extends MemoryOperandTag, TChiTotalOperand {
   override final int getSortOrder() {
     result = 13
   }
+
+  override final string getLabel() {
+    result = "total:"
+  }
 }
 
 ChiTotalOperandTag chiTotalOperand() {
@@ -336,6 +340,10 @@ class ChiPartialOperandTag extends MemoryOperandTag, TChiPartialOperand {
 
   override final int getSortOrder() {
     result = 14
+  }
+
+  override final string getLabel() {
+    result = "partial:"
   }
 }
 
