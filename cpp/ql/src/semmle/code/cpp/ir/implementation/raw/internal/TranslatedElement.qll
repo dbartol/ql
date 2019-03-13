@@ -109,6 +109,21 @@ private predicate isInvalidFunction(Function func) {
     // Expression missing a type.
     expr.getEnclosingFunction() = func and
     not exists(expr.getType())
+  ) or
+  exists(LambdaExpression lambda |
+    // Lambas not yet implemented
+    lambda.getEnclosingFunction() = func
+  ) or
+  exists(Expr expr |
+    // Vector types not yet implemented
+    expr.getEnclosingFunction() = func and
+    expr.getType().getUnspecifiedType() instanceof GNUVectorType
+  ) or
+  exists(Field f |
+    strictcount(ConstructorFieldInit init |
+      init.getEnclosingFunction() = func and
+      init.getTarget() = f
+    ) > 1
   )
 }
 

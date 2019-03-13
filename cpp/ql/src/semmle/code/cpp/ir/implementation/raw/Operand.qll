@@ -55,10 +55,10 @@ class Operand extends TOperand {
   }
 
   /**
-   * Holds if the result of the definition instruction does not exactly overlap this use.
+   * Holds if the result of the definition instruction exactly overlaps this use.
    */
-  final predicate isDefinitionInexact() {
-    not getDefinitionOverlap() instanceof MustExactlyOverlap
+  final predicate isDefinitionExact() {
+    getDefinitionOverlap() instanceof MustExactlyOverlap
   }
 
   /**
@@ -80,10 +80,10 @@ class Operand extends TOperand {
   }
 
   private string getInexactSpecifier() {
-    if isDefinitionInexact() then
-      result = "~"
-    else
+    if isDefinitionExact() then
       result = ""
+    else
+      result = "~"
   }
 
   /**

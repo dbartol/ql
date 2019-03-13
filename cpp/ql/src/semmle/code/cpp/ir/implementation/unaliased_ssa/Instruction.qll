@@ -67,89 +67,112 @@ module InstructionSanity {
   /**
    * Holds if instruction `instr` has an unexpected operand with tag `tag`.
    */
-  query predicate unexpectedOperand(Instruction instr, OperandTag tag) {
-    exists(NonPhiOperand operand |
+  query predicate unexpectedOperand(Instruction instr, string message, FunctionIR func, string funcText) {
+    exists(NonPhiOperand operand, OperandTag tag |
       operand = instr.getAnOperand() and
-      operand.getOperandTag() = tag) and
-    not expectsOperand(instr, tag) and
-    not (instr instanceof CallInstruction and tag instanceof ArgumentOperandTag) and
-    not (instr instanceof BuiltInInstruction and tag instanceof PositionalArgumentOperandTag)
+      operand.getOperandTag() = tag and
+      not expectsOperand(instr, tag) and
+      not (instr instanceof CallInstruction and tag instanceof ArgumentOperandTag) and
+      not (instr instanceof BuiltInInstruction and tag instanceof PositionalArgumentOperandTag) and
+      message = "Instruction '" + instr.getOpcode().toString() + "' has an unexpected operand with tag '" +
+        tag.toString() + "' in function '$@'." and
+      func = instr.getEnclosingFunctionIR() and
+      funcText = getIdentityString(func.getFunction())
+    )
   }
 
   /**
    * Holds if instruction `instr` has multiple operands with tag `tag`.
    */
-  query predicate duplicateOperand(Instruction instr, OperandTag tag) {
-    strictcount(NonPhiOperand operand |
-      operand = instr.getAnOperand() and
-      operand.getOperandTag() = tag
-    ) > 1 and
-    not tag instanceof UnmodeledUseOperandTag
+  query predicate duplicateOperand(Instruction instr, string message, FunctionIR func, string funcText) {
+    exists(OperandTag tag |
+      strictcount(NonPhiOperand operand |
+        operand = instr.getAnOperand() and
+        operand.getOperandTag() = tag
+      ) > 1 and
+      not tag instanceof UnmodeledUseOperandTag and
+      message = "Instruction '" + instr.getOpcode().toString() + "' has multiple operands with tag '" +
+        tag.toString() + "' in function '$@'." and
+      func = instr.getEnclosingFunctionIR() and
+      funcText = getIdentityString(func.getFunction())
+    )
   }
 
   /**
    * Holds if `Phi` instruction `instr` is missing an operand corresponding to
    * the predecessor block `pred`.
    */
-  query predicate missingPhiOperand(PhiInstruction instr, IRBlock pred) {
-    pred = instr.getBlock().getAPredecessor() and
-    not exists(PhiOperand operand |
-      operand = instr.getAnOperand() and
-      operand.getPredecessorBlock() = pred
+  query predicate missingPhiOperand(PhiInstruction instr, string message, FunctionIR func, string funcText) {
+    exists(IRBlock pred |
+      pred = instr.getBlock().getAPredecessor() and
+      not exists(PhiOperand operand |
+        operand = instr.getAnOperand() and
+        operand.getPredecessorBlock() = pred
+      ) and
+      message = "Phi instruction is missing an operand for predecessor block '" + pred.getDisplayIndex() +
+        "' in function '$@'." and
+      func = instr.getEnclosingFunctionIR() and
+      funcText = getIdentityString(func.getFunction())
     )
   }
 
-  query predicate missingOperandType(Operand operand, string message) {
-    exists(Function func |
-      not exists(operand.getType()) and
-      func = operand.getUseInstruction().getEnclosingFunction() and
-      message = "Operand missing type in function '" + getIdentityString(func) + "'."
-    )
+  query predicate missingOperandType(Operand operand, string message, FunctionIR func, string funcText) {
+    not exists(operand.getType()) and
+    message = "Operand is missing a type in function '$@'." and
+    func = operand.getEnclosingFunctionIR() and
+    funcText = getIdentityString(func.getFunction())
   }
 
   /**
    * Holds if an instruction, other than `ExitFunction`, has no successors.
    */
-  query predicate instructionWithoutSuccessor(Instruction instr) {
+  query predicate instructionWithoutSuccessor(Instruction instr, string message, FunctionIR func, string funcText) {
     not exists(instr.getASuccessor()) and
     not instr instanceof ExitFunctionInstruction and
     // Phi instructions aren't linked into the instruction-level flow graph.
     not instr instanceof PhiInstruction and
-    not instr instanceof UnreachedInstruction
+    not instr instanceof UnreachedInstruction and
+    message = "Instruction '" + instr.getOpcode().toString() + "' has no successors in function '$@'." and
+    func = instr.getEnclosingFunctionIR() and
+    funcText = getIdentityString(func.getFunction())
   }
 
   /**
-   * Holds if there are multiple (`n`) edges of kind `kind` from `source`,
-   * where `target` is among the targets of those edges.
+   * Holds if there are multiple successor edges of the same kind on a single instruction.
    */
-  query predicate ambiguousSuccessors(
-    Instruction source, EdgeKind kind, int n, Instruction target
-  ) {
-    n = strictcount(Instruction t | source.getSuccessor(kind) = t) and
-    n > 1 and
-    source.getSuccessor(kind) = target
+  query predicate ambiguousSuccessors(Instruction instr, string message, FunctionIR func, string funcText) {
+    exists(EdgeKind kind, int n |
+      n = strictcount(Instruction t | instr.getSuccessor(kind) = t) and
+      n > 1 and
+      message = "Instruction '" + instr.getOpcode().toString() + "' has multiple successors of kind '" +
+        kind.toString() + "' in function '$@'." and
+      func = instr.getEnclosingFunctionIR() and
+      funcText = getIdentityString(func.getFunction())
+    )
   }
 
   /**
-   * Holds if `instr` in `f` is part of a loop even though the AST of `f`
-   * contains no element that can cause loops.
+   * Holds if `block` in `func` is part of a loop even though the AST of `func` contains no element that can cause
+   * loops.
    */
-  query predicate unexplainedLoop(Function f, Instruction instr) {
-    exists(IRBlock block |
-      instr.getBlock() = block and
-      block.getEnclosingFunction() = f and
-      block.getASuccessor+() = block
-    ) and
-    not exists(Loop l | l.getEnclosingFunction() = f) and
-    not exists(GotoStmt s | s.getEnclosingFunction() = f)
+  query predicate unexplainedLoop(IRBlock block, string message, FunctionIR func, string funcText) {
+    block.getASuccessor+() = block and
+    not exists(Loop l | l.getEnclosingFunction() = func.getFunction()) and
+    not exists(GotoStmt s | s.getEnclosingFunction() = func.getFunction()) and
+    message = "Block '" + block.getDisplayIndex().toString() + "' is part of an unexplained loop in function '$@'." and
+    func = block.getEnclosingFunctionIR() and
+    funcText = getIdentityString(func.getFunction())
   }
 
   /**
    * Holds if a `Phi` instruction is present in a block with fewer than two
    * predecessors.
    */
-  query predicate unnecessaryPhiInstruction(PhiInstruction instr) {
-    count(instr.getBlock().getAPredecessor()) < 2
+  query predicate unnecessaryPhiInstruction(PhiInstruction instr, string message, FunctionIR func, string funcText) {
+    count(instr.getBlock().getAPredecessor()) < 2 and
+    message = "Phi instruction has fewer than two predecessor blocks in function '$@'." and
+    func = instr.getEnclosingFunctionIR() and
+    funcText = getIdentityString(func.getFunction())
   }
 
   /**

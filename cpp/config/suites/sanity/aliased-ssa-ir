@@ -1,0 +1,9 @@
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/AmbiguousSuccessors.ql: /Sanity/IR/AliasedSSA
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/DuplicateOperand.ql: /Sanity/IR/AliasedSSA
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/InstructionWithoutSuccessor.ql: /Sanity/IR/AliasedSSA
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/MissingOperand.ql: /Sanity/IR/AliasedSSA
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/MissingOperandType.ql: /Sanity/IR/AliasedSSA
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/MissingPhiOperand.ql: /Sanity/IR/AliasedSSA
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/UnexpectedOperand.ql: /Sanity/IR/AliasedSSA
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/UnexplainedLoop.ql: /Sanity/IR/AliasedSSA
++ semmlecode-cpp-queries/Sanity/IR/AliasedSSA/UnnecessaryPhiInstruction.ql: /Sanity/IR/AliasedSSA
