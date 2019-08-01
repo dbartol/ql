@@ -10,6 +10,63 @@ import Imports::Opcode
 private import Imports::OperandTag
 
 module InstructionSanity {
+
+  private predicate effectiveUseLocation(Operand operand, IRBlock block, int index) {
+    (
+      block = operand.(PhiInputOperand).getPredecessorBlock() and
+      index = block.getInstructionCount()
+    ) or
+    exists (Instruction use |
+      use = operand.(NonPhiOperand).getUse() and
+      block.getInstruction(index) = use
+    )
+  }
+
+  query predicate useNotDominatedByDefinition(Operand useOperand, string message, IRFunction func,
+    string funcText) {
+
+    exists (IRBlock useBlock, int useIndex, Instruction defInstr, IRBlock defBlock, int defIndex |
+      not useOperand.getUse() instanceof UnmodeledUseInstruction and
+      effectiveUseLocation(useOperand, useBlock, useIndex) and
+      defInstr = useOperand.getAnyDef() and
+      (
+        (
+          defInstr instanceof PhiInstruction and
+          defBlock = defInstr.getBlock() and
+          defIndex = -1
+        )
+        or
+          defBlock.getInstruction(defIndex) = defInstr
+      ) and
+      not (
+        defBlock.strictlyDominates(useBlock) or
+        (
+          defBlock = useBlock and
+          defIndex < useIndex
+        )
+      ) and
+      message = "Operand '" + useOperand.toString() +
+        "' is not dominated by its definition in function '$@'." and
+      func = useOperand.getEnclosingIRFunction() and
+      funcText = getIdentityString(func.getFunction())
+    )
+  }
+
+  private Instruction getANonPhiDefinition(Instruction instr) {
+    result = instr.getAnOperand().getAnyDef() and
+    not result instanceof PhiInstruction
+  }
+
+  query predicate operandCycle(Instruction instr, string message, IRFunction func,
+    string funcText) {
+
+    getANonPhiDefinition+(instr) = instr and
+    message = "Instruction '" + instr.toString() + "' is part of an operand cycle in function " +
+      "'$@'." and
+    func = instr.getEnclosingIRFunction() and
+    funcText = getIdentityString(func.getFunction())
+  }
+
   /**
    * Holds if the instruction `instr` should be expected to have an operand
    * with operand tag `tag`. Only holds for singleton operand tags. Tags with

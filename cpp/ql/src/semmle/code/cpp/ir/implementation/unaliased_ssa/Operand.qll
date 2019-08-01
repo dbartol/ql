@@ -38,8 +38,7 @@ private Instruction getNonPhiOperandDef(Instruction instr) {
  */
 pragma[noopt]
 private predicate isInCycle(Instruction instr) {
-  instr instanceof Instruction and
-  getNonPhiOperandDef+(instr) = instr
+  none()
 }
 
 /**
