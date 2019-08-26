@@ -135,14 +135,14 @@ void following_pointers(
 
   sourceStruct1_ptr->m1 = source();
   sink(sourceStruct1_ptr->m1); // flow
-  sink(sourceStruct1_ptr->getFirst()); // flow [NOT DETECTED with IR]
+  sink(sourceStruct1_ptr->getFirst()); // no flow (due to limitations of the analysis)
   sink(sourceStruct1_ptr->m2); // no flow
   sink(sourceStruct1.m1); // flow (due to lack of no-alias tracking)
 
   twoIntFields s = { source(), source() };
 
 
-  sink(s.m2); // flow
+  sink(s.m2); // flow (AST dataflow misses this due to limitations of the analysis)
 
   twoIntFields sArray[1] = { { source(), source() } };
   // TODO: fix this like above
@@ -150,7 +150,7 @@ void following_pointers(
 
   twoIntFields sSwapped = { .m2 = source(), .m1 = 0 };
 
-  sink(sSwapped.m2); // flow
+  sink(sSwapped.m2); // flow (AST dataflow misses this due to limitations of the analysis)
 
   sink(sourceFunctionPointer()); // no flow
 
@@ -410,11 +410,11 @@ class FlowThroughFields {
   int f() {
     sink(field); // tainted or clean? Not sure.
     taintField();
-    sink(field); // tainted [NOT DETECTED with IR]
+    sink(field); // tainted (FALSE NEGATIVE)
   }
 
   int calledAfterTaint() {
-    sink(field); // tainted [NOT DETECTED with IR]
+    sink(field); // tainted (FALSE NEGATIVE)
   }
 
   int taintAndCall() {

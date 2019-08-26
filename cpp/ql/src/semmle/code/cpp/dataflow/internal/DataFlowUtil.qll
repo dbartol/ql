@@ -9,16 +9,10 @@ private import semmle.code.cpp.models.interfaces.DataFlow
 cached
 private newtype TNode =
   TExprNode(Expr e) or
-  TPartialDefinitionNode(PartialDefinition pd) or
-  TPreObjectInitializerNode(Expr e) {
-    e instanceof ConstructorCall
-    or
-    e instanceof ClassAggregateLiteral
+  TParameterNode(Parameter p) { exists(p.getFunction().getBlock()) } or
+  TDefinitionByReferenceNode(VariableAccess va, Expr argument) {
+    definitionByReference(va, argument)
   } or
-  TExplicitParameterNode(Parameter p) { exists(p.getFunction().getBlock()) } or
-  TInstanceParameterNode(MemberFunction f) { exists(f.getBlock()) and not f.isStatic() } or
-  TPreConstructorInitThis(ConstructorFieldInit cfi) or
-  TPostConstructorInitThis(ConstructorFieldInit cfi) or
   TUninitializedNode(LocalVariable v) { not v.hasInitializer() }
 
 /**
@@ -44,22 +38,10 @@ class Node extends TNode {
   Expr asExpr() { result = this.(ExprNode).getExpr() }
 
   /** Gets the parameter corresponding to this node, if any. */
-  Parameter asParameter() { result = this.(ExplicitParameterNode).getParameter() }
+  Parameter asParameter() { result = this.(ParameterNode).getParameter() }
 
   /** Gets the argument that defines this `DefinitionByReferenceNode`, if any. */
   Expr asDefiningArgument() { result = this.(DefinitionByReferenceNode).getArgument() }
-
-  /**
-   * Gets the expression that is partially defined by this node, if any.
-   *
-   * Partial definitions are created for field stores (`x.y = taint();` is a partial
-   * definition of `x`), and for calls that may change the value of an object (so
-   * `x.set(taint())` is a partial definition of `x`, and `transfer(&x, taint())` is
-   * a partial definition of `&x`).
-   */
-  Expr asPartialDefinition() {
-    result = this.(PartialDefinitionNode).getPartialDefinition().getDefinedExpr()
-  }
 
   /**
    * Gets the uninitialized local variable corresponding to this node, if
@@ -106,49 +88,20 @@ class ExprNode extends Node, TExprNode {
 
   override string toString() { result = expr.toString() }
 
-  override Location getLocation() {
-    result = getExprLocationOverride(expr)
-    or
-    not exists(getExprLocationOverride(expr)) and
-    result = expr.getLocation()
-  }
+  override Location getLocation() { result = expr.getLocation() }
 
   /** Gets the expression corresponding to this node. */
   Expr getExpr() { result = expr }
 }
 
 /**
- * Gets a location for `e` that's more accurate than `e.getLocation()`, if any.
- */
-private Location getExprLocationOverride(Expr e) {
-  // Base case: the parent has a better location than `e`.
-  e.getLocation() instanceof UnknownExprLocation and
-  result = e.getParent().getLocation() and
-  not result instanceof UnknownLocation
-  or
-  // Recursive case: the parent has a location override that's better than what
-  // `e` has.
-  e.getLocation() instanceof UnknownExprLocation and
-  result = getExprLocationOverride(e.getParent()) and
-  not result instanceof UnknownLocation
-}
-
-abstract class ParameterNode extends Node, TNode {
-  /**
-   * Holds if this node is the parameter of `c` at the specified (zero-based)
-   * position. The implicit `this` parameter is considered to have index `-1`.
-   */
-  abstract predicate isParameterOf(Function f, int i);
-}
-
-/**
  * The value of a parameter at function entry, viewed as a node in a data
  * flow graph.
  */
-class ExplicitParameterNode extends ParameterNode, TExplicitParameterNode {
+class ParameterNode extends Node, TParameterNode {
   Parameter param;
 
-  ExplicitParameterNode() { this = TExplicitParameterNode(param) }
+  ParameterNode() { this = TParameterNode(param) }
 
   override Function getFunction() { result = param.getFunction() }
 
@@ -161,23 +114,11 @@ class ExplicitParameterNode extends ParameterNode, TExplicitParameterNode {
   /** Gets the parameter corresponding to this node. */
   Parameter getParameter() { result = param }
 
-  override predicate isParameterOf(Function f, int i) { f.getParameter(i) = param }
-}
-
-class ImplicitParameterNode extends ParameterNode, TInstanceParameterNode {
-  MemberFunction f;
-
-  ImplicitParameterNode() { this = TInstanceParameterNode(f) }
-
-  override Function getFunction() { result = f }
-
-  override Type getType() { result = f.getDeclaringType() }
-
-  override string toString() { result = "`this` parameter in " + f.getName() }
-
-  override Location getLocation() { result = f.getLocation() }
-
-  override predicate isParameterOf(Function fun, int i) { f = fun and i = -1 }
+  /**
+   * Holds if this node is the parameter of `c` at the specified (zero-based)
+   * position. The implicit `this` parameter is considered to have index `-1`.
+   */
+  predicate isParameterOf(Function f, int i) { f.getParameter(i) = param }
 }
 
 /**
@@ -189,18 +130,12 @@ class ImplicitParameterNode extends ParameterNode, TInstanceParameterNode {
  * `DefinitionByReferenceNode` to represent the value of `x` after the call has
  * returned. This node will have its `getArgument()` equal to `&x`.
  */
-class DefinitionByReferenceNode extends PartialDefinitionNode {
+class DefinitionByReferenceNode extends Node, TDefinitionByReferenceNode {
   VariableAccess va;
 
   Expr argument;
 
-  DefinitionByReferenceNode() {
-    exists(DefinitionByReference def |
-      def = this.getPartialDefinition() and
-      argument = def.getDefinedExpr() and
-      va = def.getVariableAccess()
-    )
-  }
+  DefinitionByReferenceNode() { this = TDefinitionByReferenceNode(va, argument) }
 
   override Function getFunction() { result = va.getEnclosingFunction() }
 
@@ -255,110 +190,13 @@ class UninitializedNode extends Node, TUninitializedNode {
  * to the value before the update with the exception of `ClassInstanceExpr`,
  * which represents the value after the constructor has run.
  */
-abstract class PostUpdateNode extends Node {
+class PostUpdateNode extends Node {
+  PostUpdateNode() { none() } // stub implementation
+
   /**
    * Gets the node before the state update.
    */
-  abstract Node getPreUpdateNode();
-
-  override Function getFunction() { result = getPreUpdateNode().getFunction() }
-
-  override Type getType() { result = getPreUpdateNode().getType() }
-
-  override Location getLocation() { result = getPreUpdateNode().getLocation() }
-}
-
-class PartialDefinitionNode extends PostUpdateNode, TPartialDefinitionNode {
-  PartialDefinition pd;
-
-  PartialDefinitionNode() { this = TPartialDefinitionNode(pd) }
-
-  override Node getPreUpdateNode() { result.asExpr() = pd.getDefinedExpr() }
-
-  override Location getLocation() { result = pd.getLocation() }
-
-  PartialDefinition getPartialDefinition() { result = pd }
-
-  override string toString() { result = getPreUpdateNode().toString() + " [post update]" }
-}
-
-/**
- * A node representing the temporary value of an object that was just
- * constructed by a constructor call or an aggregate initializer. This is only
- * for objects, not for pointers to objects.
- *
- * These expressions are their own post-update nodes but instead have synthetic
- * pre-update nodes.
- */
-private class ObjectInitializerNode extends PostUpdateNode, TExprNode {
-  PreObjectInitializerNode pre;
-
-  ObjectInitializerNode() {
-    // If a `Node` is associated with a `PreObjectInitializerNode`, then it's
-    // an `ObjectInitializerNode`.
-    pre.getExpr() = this.asExpr()
-  }
-
-  override PreObjectInitializerNode getPreUpdateNode() { result = pre }
-
-  // No override of `toString` since these nodes already have a `toString` from
-  // their overlap with `ExprNode`.
-}
-
-/**
- * INTERNAL: do not use.
- *
- * A synthetic data-flow node that plays the role of a temporary object that
- * has not yet been initialized.
- */
-class PreObjectInitializerNode extends Node, TPreObjectInitializerNode {
-  Expr getExpr() { this = TPreObjectInitializerNode(result) }
-
-  override Function getFunction() { result = getExpr().getEnclosingFunction() }
-
-  override Type getType() { result = getExpr().getType() }
-
-  override Location getLocation() { result = getExpr().getLocation() }
-
-  override string toString() { result = getExpr().toString() + " [pre init]" }
-}
-
-/**
- * A synthetic data-flow node that plays the role of the post-update `this`
- * pointer in a `ConstructorFieldInit`. For example, the `x(1)` in
- * `C() : x(1) { }` is roughly equivalent to `this.x = 1`, and this node is
- * equivalent to the `this` _after_ the field has been assigned.
- */
-private class PostConstructorInitThis extends PostUpdateNode, TPostConstructorInitThis {
-  override PreConstructorInitThis getPreUpdateNode() {
-    this = TPostConstructorInitThis(result.getConstructorFieldInit())
-  }
-
-  override string toString() {
-    result = getPreUpdateNode().getConstructorFieldInit().toString() + " [post-this]"
-  }
-}
-
-/**
- * INTERNAL: do not use.
- *
- * A synthetic data-flow node that plays the role of the pre-update `this`
- * pointer in a `ConstructorFieldInit`. For example, the `x(1)` in
- * `C() : x(1) { }` is roughly equivalent to `this.x = 1`, and this node is
- * equivalent to the `this` _before_ the field has been assigned.
- */
-class PreConstructorInitThis extends Node, TPreConstructorInitThis {
-  ConstructorFieldInit getConstructorFieldInit() { this = TPreConstructorInitThis(result) }
-
-  override Constructor getFunction() { result = getConstructorFieldInit().getEnclosingFunction() }
-
-  override PointerType getType() {
-    result.getBaseType() = getConstructorFieldInit().getEnclosingFunction().getDeclaringType()
-  }
-
-  override Location getLocation() { result = getConstructorFieldInit().getLocation() }
-
-  override string toString() { result = getConstructorFieldInit().toString() + " [pre-this]" }
+  Node getPreUpdateNode() { none() } // stub implementation
 }
 
 /**
@@ -369,7 +207,7 @@ ExprNode exprNode(Expr e) { result.getExpr() = e }
 /**
  * Gets the `Node` corresponding to the value of `p` at function entry.
  */
-ParameterNode parameterNode(Parameter p) { result.(ExplicitParameterNode).getParameter() = p }
+ParameterNode parameterNode(Parameter p) { result.getParameter() = p }
 
 /**
  * Gets the `Node` corresponding to a definition by reference of the variable
@@ -384,60 +222,6 @@ DefinitionByReferenceNode definitionByReferenceNodeFromArgument(Expr argument) {
  * variable `v`.
  */
 UninitializedNode uninitializedNode(LocalVariable v) { result.getLocalVariable() = v }
-
-private module ThisFlow {
-  /**
-   * Gets the 0-based index of `thisNode` in `b`, where `thisNode` is an access
-   * to `this` that may or may not have an associated `PostUpdateNode`. To make
-   * room for synthetic nodes that access `this`, the index may not correspond
-   * to an actual `ControlFlowNode`.
-   */
-  private int basicBlockThisIndex(BasicBlock b, Node thisNode) {
-    // The implicit `this` parameter node is given a very negative offset to
-    // make space for any `ConstructorFieldInit`s there may be between it and
-    // the block contents.
-    thisNode.(ImplicitParameterNode).getFunction().getBlock() = b and
-    result = -2147483648
-    or
-    // Place the synthetic `this` node for a `ConstructorFieldInit` at a
-    // negative offset in the first basic block, between the
-    // `ImplicitParameterNode` and the first statement.
-    exists(Constructor constructor, int i |
-      thisNode.(PreConstructorInitThis).getConstructorFieldInit() =
-        constructor.getInitializer(i) and
-      result = -2147483648 + 1 + i and
-      b = thisNode.getFunction().getBlock()
-    )
-    or
-    b.getNode(result) = thisNode.asExpr().(ThisExpr)
-  }
-
-  private int thisRank(BasicBlock b, Node thisNode) {
-    thisNode = rank[result](Node n, int i | i = basicBlockThisIndex(b, n) | n order by i)
-  }
-
-  private int lastThisRank(BasicBlock b) { result = max(thisRank(b, _)) }
-
-  private predicate thisAccessBlockReaches(BasicBlock b1, BasicBlock b2) {
-    exists(basicBlockThisIndex(b1, _)) and b2 = b1.getASuccessor()
-    or
-    exists(BasicBlock mid |
-      thisAccessBlockReaches(b1, mid) and
-      b2 = mid.getASuccessor() and
-      not exists(basicBlockThisIndex(mid, _))
-    )
-  }
-
-  predicate adjacentThisRefs(Node n1, Node n2) {
-    exists(BasicBlock b | thisRank(b, n1) + 1 = thisRank(b, n2))
-    or
-    exists(BasicBlock b1, BasicBlock b2 |
-      lastThisRank(b1) = thisRank(b1, n1) and
-      thisAccessBlockReaches(b1, b2) and
-      thisRank(b2, n2) = 1
-    )
-  }
-}
 
 /**
  * Holds if data flows from `nodeFrom` to `nodeTo` in exactly one local
@@ -458,8 +242,6 @@ predicate simpleLocalFlowStep(Node nodeFrom, Node nodeTo) {
   // Expr -> Expr
   exprToExprStep_nocfg(nodeFrom.asExpr(), nodeTo.asExpr())
   or
-  exprToExprStep_nocfg(nodeFrom.(PostUpdateNode).getPreUpdateNode().asExpr(), nodeTo.asExpr())
-  or
   // Node -> FlowVar -> VariableAccess
   exists(FlowVar var |
     (
@@ -469,19 +251,13 @@ predicate simpleLocalFlowStep(Node nodeFrom, Node nodeTo) {
       or
       varSourceBaseCase(var, nodeFrom.asUninitialized())
       or
-      var.definedPartiallyAt(nodeFrom.asPartialDefinition())
+      var.definedByReference(nodeFrom.asDefiningArgument())
     ) and
     varToExprStep(var, nodeTo.asExpr())
   )
   or
   // Expr -> DefinitionByReferenceNode
   exprToDefinitionByReferenceStep(nodeFrom.asExpr(), nodeTo.asDefiningArgument())
-  or
-  // `this` -> adjacent-`this`
-  ThisFlow::adjacentThisRefs(nodeFrom, nodeTo)
-  or
-  // post-update-`this` -> following-`this`-ref
-  ThisFlow::adjacentThisRefs(nodeFrom.(PostUpdateNode).getPreUpdateNode(), nodeTo)
 }
 
 /**
@@ -527,23 +303,6 @@ private predicate exprToExprStep_nocfg(Expr fromExpr, Expr toExpr) {
   toExpr = any(PostfixCrementOperation op | fromExpr = op.getOperand())
   or
   toExpr = any(StmtExpr stmtExpr | fromExpr = stmtExpr.getResultExpr())
-  or
-  // The following case is needed to track the qualifier object for flow
-  // through fields. It gives flow from `T(x)` to `new T(x)`. That's not
-  // strictly _data_ flow but _taint_ flow because the type of `fromExpr` is
-  // `T` while the type of `toExpr` is `T*`.
-  //
-  // This discrepancy is an artifact of how `new`-expressions are represented
-  // in the database in a way that slightly varies from what the standard
-  // specifies. In the C++ standard, there is no constructor call expression
-  // `T(x)` after `new`. Instead there is a type `T` and an optional
-  // initializer `(x)`.
-  toExpr.(NewExpr).getInitializer() = fromExpr
-  or
-  // A lambda expression (`[captures](params){body}`) is just a thin wrapper
-  // around the desugared closure creation in the form of a
-  // `ClassAggregateLiteral` (`{ capture1, ..., captureN }`).
-  toExpr.(LambdaExpression).getInitializer() = fromExpr
   or
   toExpr = any(Call call |
       exists(DataFlowFunction f, FunctionInput inModel, FunctionOutput outModel, int iIn |
