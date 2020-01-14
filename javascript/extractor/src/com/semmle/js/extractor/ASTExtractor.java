@@ -1,5 +1,11 @@
 package com.semmle.js.extractor;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+
 import com.semmle.js.ast.AClass;
 import com.semmle.js.ast.AFunction;
 import com.semmle.js.ast.AFunctionExpression;
@@ -7,6 +13,7 @@ import com.semmle.js.ast.ArrayExpression;
 import com.semmle.js.ast.ArrayPattern;
 import com.semmle.js.ast.ArrowFunctionExpression;
 import com.semmle.js.ast.AssignmentExpression;
+import com.semmle.js.ast.AssignmentPattern;
 import com.semmle.js.ast.AwaitExpression;
 import com.semmle.js.ast.BinaryExpression;
 import com.semmle.js.ast.BindExpression;
@@ -103,6 +110,7 @@ import com.semmle.js.extractor.ExtractorConfig.Platform;
 import com.semmle.js.extractor.ExtractorConfig.SourceType;
 import com.semmle.js.extractor.ScopeManager.DeclKind;
 import com.semmle.js.extractor.ScopeManager.Scope;
+import com.semmle.js.parser.ParseError;
 import com.semmle.ts.ast.ArrayTypeExpr;
 import com.semmle.ts.ast.ConditionalTypeExpr;
 import com.semmle.ts.ast.DecoratorList;
@@ -144,11 +152,6 @@ import com.semmle.ts.ast.UnionTypeExpr;
 import com.semmle.util.collections.CollectionUtil;
 import com.semmle.util.trap.TrapWriter;
 import com.semmle.util.trap.TrapWriter.Label;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
 
 /** Extractor for AST-based information; invoked by the {@link JSExtractor}. */
 public class ASTExtractor {
@@ -307,6 +310,7 @@ public class ASTExtractor {
     private final Platform platform;
     private final SourceType sourceType;
     private boolean isStrict;
+    private List<ParseError> additionalErrors = new ArrayList<>();
 
     public V(Platform platform, SourceType sourceType) {
       this.platform = platform;
@@ -516,8 +520,95 @@ public class ASTExtractor {
       String valueString = nd.getStringValue();
 
       trapwriter.addTuple("literals", valueString, source, key);
-      if (nd.isRegExp()) regexpExtractor.extract(source.substring(1, source.lastIndexOf('/')), nd);
+      if (nd.isRegExp()) {
+        OffsetTranslation offsets = new OffsetTranslation();
+        offsets.set(0, 1); // skip the initial '/'
+        regexpExtractor.extract(source.substring(1, source.lastIndexOf('/')), offsets, nd, false);
+      } else if (nd.isStringLiteral() && !c.isInsideType() && nd.getRaw().length() < 1000) {
+        regexpExtractor.extract(valueString, makeStringLiteralOffsets(nd.getRaw()), nd, true);
+      }
       return key;
+    }
+
+    private boolean isOctalDigit(char ch) {
+      return '0' <= ch && ch <= '7';
+    }
+
+    /**
+     * Builds a translation from offsets in a string value back to its original raw literal text
+     * (including quotes).
+     *
+     * <p>This is not a 1:1 mapping since escape sequences take up more characters in the raw
+     * literal than in the resulting string value. This mapping includes the surrounding quotes.
+     *
+     * <p>For example: for the raw literal value <code>'x\.y'</code> (quotes included), the <code>y
+     * </code> at index 2 in <code>x.y</code> maps to index 4 in the raw literal.
+     */
+    public OffsetTranslation makeStringLiteralOffsets(String rawLiteral) {
+      OffsetTranslation offsets = new OffsetTranslation();
+      offsets.set(0, 1); // Skip the initial quote
+      // Invariant: raw character at 'pos' corresponds to decoded character at 'pos - delta'
+      int pos = 1;
+      int delta = 1;
+      while (pos < rawLiteral.length() - 1) {
+        if (rawLiteral.charAt(pos) != '\\') {
+          ++pos;
+          continue;
+        }
+        final int length; // Length of the escape sequence, including slash.
+        int outputLength = 1; // Number characters the sequence expands to.
+        char ch = rawLiteral.charAt(pos + 1);
+        if ('0' <= ch && ch <= '7') {
+          // Octal escape: \N, \NN, or \NNN
+          int firstDigit = pos + 1;
+          int end = firstDigit;
+          int maxEnd = Math.min(firstDigit + (ch <= '3' ? 3 : 2), rawLiteral.length());
+          while (end < maxEnd && isOctalDigit(rawLiteral.charAt(end))) {
+            ++end;
+          }
+          length = end - pos;
+        } else if (ch == 'x') {
+          // Hex escape: \xNN
+          length = 4;
+        } else if (ch == 'u' && pos + 2 < rawLiteral.length()) {
+          if (rawLiteral.charAt(pos + 2) == '{') {
+            // Variable-length unicode escape: \U{N...}
+            // Scan for the ending '}'
+            int firstDigit = pos + 3;
+            int end = firstDigit;
+            int leadingZeros = 0;
+            while (end < rawLiteral.length() && rawLiteral.charAt(end) == '0') {
+              ++end;
+              ++leadingZeros;
+            }
+            while (end < rawLiteral.length() && rawLiteral.charAt(end) != '}') {
+              ++end;
+            }
+            int numDigits = end - firstDigit;
+            if (numDigits - leadingZeros > 4) {
+              outputLength = 2; // Encoded as a surrogate pair
+            }
+            ++end; // Include '}' character
+            length = end - pos;
+          } else {
+            // Fixed-length unicode escape: \UNNNN
+            length = 6;
+          }
+        } else {
+          // Simple escape: \n or similar.
+          length = 2;
+        }
+        int end = pos + length;
+        if (end > rawLiteral.length()) {
+          end = rawLiteral.length();
+        }
+        int outputPos = pos - delta;
+        // Map the next character to the adjusted offset.
+        offsets.set(outputPos + outputLength, end);
+        delta += length - outputLength;
+        pos = end;
+      }
+      return offsets;
     }
 
     @Override
@@ -813,7 +904,12 @@ public class ASTExtractor {
       for (IPattern param : nd.getAllParams()) {
         scopeManager.addNames(
             scopeManager.collectDeclaredNames(param, isStrict, false, DeclKind.var));
-        visit(param, key, i, IdContext.varDecl);
+        Label paramKey = visit(param, key, i, IdContext.varDecl);
+
+        // Extract optional parameters
+        if (nd.getOptionalParameterIndices().contains(i)) {
+          trapwriter.addTuple("isOptionalParameterDeclaration", paramKey);
+        }
         ++i;
       }
 
@@ -1306,7 +1402,8 @@ public class ASTExtractor {
               Collections.emptyList(),
               Collections.emptyList(),
               null,
-              null);
+              null,
+              AFunction.noOptionalParams);
       String fnSrc = hasSuperClass ? "(...args) { super(...args); }" : "() {}";
       SourceLocation fnloc = fakeLoc(fnSrc, loc);
       FunctionExpression fn = new FunctionExpression(fnloc, fndef);
@@ -1961,14 +2058,22 @@ public class ASTExtractor {
       visit(nd.getRight(), key, 1, IdContext.label);
       return key;
     }
+
+    @Override
+    public Label visit(AssignmentPattern nd, Context c) {
+      additionalErrors.add(new ParseError("Unexpected assignment pattern.", nd.getLoc().getStart()));
+      return super.visit(nd, c);
+    }
   }
 
-  public void extract(Node root, Platform platform, SourceType sourceType, int toplevelKind) {
+  public List<ParseError> extract(Node root, Platform platform, SourceType sourceType, int toplevelKind) {
     lexicalExtractor.getMetrics().startPhase(ExtractionPhase.ASTExtractor_extract);
     trapwriter.addTuple("toplevels", toplevelLabel, toplevelKind);
     locationManager.emitNodeLocation(root, toplevelLabel);
 
-    root.accept(new V(platform, sourceType), null);
+    V visitor = new V(platform, sourceType);
+    root.accept(visitor, null);
     lexicalExtractor.getMetrics().stopPhase(ExtractionPhase.ASTExtractor_extract);
+    return visitor.additionalErrors;
   }
 }

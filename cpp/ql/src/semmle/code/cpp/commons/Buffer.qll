@@ -44,7 +44,7 @@ predicate memberMayBeVarSize(Class c, MemberVariable v) {
       aoe.getAddressable() = v
     )
     or
-    exists(BuiltInOperationOffsetOf oo |
+    exists(BuiltInOperationBuiltInOffsetOf oo |
       // `offsetof(c, v)` using a builtin
       oo.getAChild().(VariableAccess).getTarget() = v
     )
@@ -85,7 +85,7 @@ int getBufferSize(Expr bufferExpr, Element why) {
   )
   or
   // buffer is a fixed size dynamic allocation
-  isFixedSizeAllocationExpr(bufferExpr, result) and
+  result = bufferExpr.(AllocationExpr).getSizeBytes() and
   why = bufferExpr
   or
   exists(DataFlow::ExprNode bufferExprNode |

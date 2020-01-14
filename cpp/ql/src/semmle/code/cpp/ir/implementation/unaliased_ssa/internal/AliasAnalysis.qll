@@ -7,26 +7,6 @@ private import semmle.code.cpp.models.interfaces.Alias
 private class IntValue = Ints::IntValue;
 
 /**
- * Converts the bit count in `bits` to a byte count and a bit count in the form
- * bytes:bits.
- */
-bindingset[bits]
-string bitsToBytesAndBits(int bits) { result = (bits / 8).toString() + ":" + (bits % 8).toString() }
-
-/**
- * Gets a printable string for a bit offset with possibly unknown value.
- */
-bindingset[bitOffset]
-string getBitOffsetString(IntValue bitOffset) {
-  if Ints::hasValue(bitOffset)
-  then
-    if bitOffset >= 0
-    then result = "+" + bitsToBytesAndBits(bitOffset)
-    else result = "-" + bitsToBytesAndBits(Ints::neg(bitOffset))
-  else result = "+?"
-}
-
-/**
  * Gets the offset of field `field` in bits.
  */
 private IntValue getFieldBitOffset(Field field) {
@@ -69,6 +49,7 @@ private predicate operandEscapesDomain(Operand operand) {
   not isArgumentForParameter(_, operand, _) and
   not isOnlyEscapesViaReturnArgument(operand) and
   not operand.getUse() instanceof ReturnValueInstruction and
+  not operand.getUse() instanceof ReturnIndirectionInstruction and
   not operand instanceof PhiInputOperand
 }
 
@@ -130,7 +111,11 @@ private predicate operandIsPropagated(Operand operand, IntValue bitOffset) {
       or
       // Adding an integer to or subtracting an integer from a pointer propagates
       // the address with an offset.
-      bitOffset = getPointerBitOffset(instr.(PointerOffsetInstruction))
+      exists(PointerOffsetInstruction ptrOffset |
+        ptrOffset = instr and
+        operand = ptrOffset.getLeftOperand() and
+        bitOffset = getPointerBitOffset(ptrOffset)
+      )
       or
       // Computing a field address from a pointer propagates the address plus the
       // offset of the field.

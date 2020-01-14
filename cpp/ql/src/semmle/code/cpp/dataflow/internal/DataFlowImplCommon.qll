@@ -57,14 +57,14 @@ private module ImplCommon {
         exists(Node mid |
           parameterValueFlowCand(p, mid) and
           step(mid, node) and
-          compatibleTypes(p.getType(), node.getType())
+          compatibleTypes(getErasedNodeType(p), getErasedNodeType(node))
         )
         or
         // flow through a callable
         exists(Node arg |
           parameterValueFlowCand(p, arg) and
           argumentValueFlowsThroughCand(arg, node) and
-          compatibleTypes(p.getType(), node.getType())
+          compatibleTypes(getErasedNodeType(p), getErasedNodeType(node))
         )
       }
 
@@ -95,7 +95,7 @@ private module ImplCommon {
           argumentValueFlowsThroughCand0(call, arg, kind)
         |
           out = getAnOutNode(call, kind) and
-          compatibleTypes(arg.getType(), out.getType())
+          compatibleTypes(getErasedNodeType(arg), getErasedNodeType(out))
         )
       }
 
@@ -183,7 +183,7 @@ private module ImplCommon {
         exists(Node mid |
           parameterValueFlow(p, mid, cc) and
           step(mid, node) and
-          compatibleTypes(p.getType(), node.getType()) and
+          compatibleTypes(getErasedNodeType(p), getErasedNodeType(node)) and
           not isUnreachableInCall(node, cc.(CallContextSpecificCall).getCall())
         )
         or
@@ -191,7 +191,7 @@ private module ImplCommon {
         exists(Node arg |
           parameterValueFlow(p, arg, cc) and
           argumentValueFlowsThrough(arg, node, cc) and
-          compatibleTypes(p.getType(), node.getType()) and
+          compatibleTypes(getErasedNodeType(p), getErasedNodeType(node)) and
           not isUnreachableInCall(node, cc.(CallContextSpecificCall).getCall())
         )
       }
@@ -226,7 +226,7 @@ private module ImplCommon {
         |
           out = getAnOutNode(call, kind) and
           not isUnreachableInCall(out, cc.(CallContextSpecificCall).getCall()) and
-          compatibleTypes(arg.getType(), out.getType())
+          compatibleTypes(getErasedNodeType(arg), getErasedNodeType(out))
         )
       }
     }
@@ -260,7 +260,7 @@ private module ImplCommon {
       exists(Node mid |
         parameterValueFlowNoCtx(p, mid) and
         localValueStep(mid, node) and
-        compatibleTypes(p.getType(), node.getType())
+        compatibleTypes(getErasedNodeType(p), getErasedNodeType(node))
       )
     }
 
@@ -296,8 +296,8 @@ private module ImplCommon {
         setterCall(call, i1, i2, f) and
         node1.(ArgumentNode).argumentOf(call, i1) and
         node2.getPreUpdateNode().(ArgumentNode).argumentOf(call, i2) and
-        compatibleTypes(node1.getTypeBound(), f.getType()) and
-        compatibleTypes(node2.getTypeBound(), f.getContainerType())
+        compatibleTypes(getErasedNodeTypeBound(node1), f.getType()) and
+        compatibleTypes(getErasedNodeTypeBound(node2), f.getContainerType())
       )
     }
 
@@ -333,8 +333,8 @@ private module ImplCommon {
       exists(DataFlowCall call, ReturnKind kind |
         storeReturn0(call, kind, node1, f) and
         node2 = getAnOutNode(call, kind) and
-        compatibleTypes(node1.getTypeBound(), f.getType()) and
-        compatibleTypes(node2.getTypeBound(), f.getContainerType())
+        compatibleTypes(getErasedNodeTypeBound(node1), f.getType()) and
+        compatibleTypes(getErasedNodeTypeBound(node2), f.getContainerType())
       )
     }
 
@@ -360,13 +360,13 @@ private module ImplCommon {
      */
     cached
     predicate read(Node node1, Content f, Node node2) {
-      readStep(node1, f, node2) and storeStep(_, f, _)
+      readStep(node1, f, node2)
       or
       exists(DataFlowCall call, ReturnKind kind |
         read0(call, kind, node1, f) and
         node2 = getAnOutNode(call, kind) and
-        compatibleTypes(node1.getTypeBound(), f.getContainerType()) and
-        compatibleTypes(node2.getTypeBound(), f.getType())
+        compatibleTypes(getErasedNodeTypeBound(node1), f.getContainerType()) and
+        compatibleTypes(getErasedNodeTypeBound(node2), f.getType())
       )
     }
 
@@ -384,7 +384,7 @@ private module ImplCommon {
         store(node1, f, mid1) and
         localValueStep*(mid1, mid2) and
         read(mid2, f, node2) and
-        compatibleTypes(node1.getTypeBound(), node2.getTypeBound())
+        compatibleTypes(getErasedNodeTypeBound(node1), getErasedNodeTypeBound(node2))
       )
     }
 
@@ -405,14 +405,14 @@ private module ImplCommon {
         exists(Node mid |
           parameterValueFlowCand(p, mid) and
           step(mid, node) and
-          compatibleTypes(p.getType(), node.getType())
+          compatibleTypes(getErasedNodeType(p), getErasedNodeType(node))
         )
         or
         // flow through a callable
         exists(Node arg |
           parameterValueFlowCand(p, arg) and
           argumentValueFlowsThroughCand(arg, node) and
-          compatibleTypes(p.getType(), node.getType())
+          compatibleTypes(getErasedNodeType(p), getErasedNodeType(node))
         )
       }
 
@@ -443,7 +443,7 @@ private module ImplCommon {
           argumentValueFlowsThroughCand0(call, arg, kind)
         |
           out = getAnOutNode(call, kind) and
-          compatibleTypes(arg.getType(), out.getType())
+          compatibleTypes(getErasedNodeType(arg), getErasedNodeType(out))
         )
       }
 
@@ -531,7 +531,7 @@ private module ImplCommon {
         exists(Node mid |
           parameterValueFlow(p, mid, cc) and
           step(mid, node) and
-          compatibleTypes(p.getType(), node.getType()) and
+          compatibleTypes(getErasedNodeType(p), getErasedNodeType(node)) and
           not isUnreachableInCall(node, cc.(CallContextSpecificCall).getCall())
         )
         or
@@ -539,7 +539,7 @@ private module ImplCommon {
         exists(Node arg |
           parameterValueFlow(p, arg, cc) and
           argumentValueFlowsThrough(arg, node, cc) and
-          compatibleTypes(p.getType(), node.getType()) and
+          compatibleTypes(getErasedNodeType(p), getErasedNodeType(node)) and
           not isUnreachableInCall(node, cc.(CallContextSpecificCall).getCall())
         )
       }
@@ -574,7 +574,7 @@ private module ImplCommon {
         |
           out = getAnOutNode(call, kind) and
           not isUnreachableInCall(out, cc.(CallContextSpecificCall).getCall()) and
-          compatibleTypes(arg.getType(), out.getType())
+          compatibleTypes(getErasedNodeType(arg), getErasedNodeType(out))
         )
       }
     }
@@ -615,7 +615,7 @@ private module ImplCommon {
 
     cached
     newtype TReturnPosition =
-      TReturnPosition0(DataFlowCallable c, ReturnKind kind) { returnPosition(_, c, kind) }
+      TReturnPosition0(DataFlowCallable c, ReturnKindExt kind) { returnPosition(_, c, kind) }
 
     cached
     newtype TLocalFlowCallContext =
@@ -624,7 +624,7 @@ private module ImplCommon {
   }
 
   pragma[noinline]
-  private predicate returnPosition(ReturnNode ret, DataFlowCallable c, ReturnKind kind) {
+  private predicate returnPosition(ReturnNodeExt ret, DataFlowCallable c, ReturnKindExt kind) {
     c = returnNodeGetEnclosingCallable(ret) and
     kind = ret.getKind()
   }
@@ -736,10 +736,80 @@ private module ImplCommon {
     else result instanceof LocalCallContextAny
   }
 
+  /**
+   * A node from which flow can return to the caller. This is either a regular
+   * `ReturnNode` or a `PostUpdateNode` corresponding to the value of a parameter.
+   */
+  class ReturnNodeExt extends Node {
+    ReturnNodeExt() {
+      this instanceof ReturnNode or
+      parameterValueFlowsToUpdate(_, this)
+    }
+
+    /** Gets the kind of this returned value. */
+    ReturnKindExt getKind() {
+      result = TValueReturn(this.(ReturnNode).getKind())
+      or
+      exists(ParameterNode p, int pos |
+        parameterValueFlowsToUpdate(p, this) and
+        p.isParameterOf(_, pos) and
+        result = TParamUpdate(pos)
+      )
+    }
+  }
+
+  private newtype TReturnKindExt =
+    TValueReturn(ReturnKind kind) or
+    TParamUpdate(int pos) {
+      exists(ParameterNode p | parameterValueFlowsToUpdate(p, _) and p.isParameterOf(_, pos))
+    }
+
+  /**
+   * An extended return kind. A return kind describes how data can be returned
+   * from a callable. This can either be through a returned value or an updated
+   * parameter.
+   */
+  abstract class ReturnKindExt extends TReturnKindExt {
+    /** Gets a textual representation of this return kind. */
+    abstract string toString();
+
+    /** Gets a node corresponding to data flow out of `call`. */
+    abstract Node getAnOutNode(DataFlowCall call);
+  }
+
+  class ValueReturnKind extends ReturnKindExt, TValueReturn {
+    private ReturnKind kind;
+
+    ValueReturnKind() { this = TValueReturn(kind) }
+
+    ReturnKind getKind() { result = kind }
+
+    override string toString() { result = kind.toString() }
+
+    override Node getAnOutNode(DataFlowCall call) { result = getAnOutNode(call, this.getKind()) }
+  }
+
+  class ParamUpdateReturnKind extends ReturnKindExt, TParamUpdate {
+    private int pos;
+
+    ParamUpdateReturnKind() { this = TParamUpdate(pos) }
+
+    int getPosition() { result = pos }
+
+    override string toString() { result = "param update " + pos }
+
+    override Node getAnOutNode(DataFlowCall call) {
+      exists(ArgumentNode arg |
+        result.(PostUpdateNode).getPreUpdateNode() = arg and
+        arg.argumentOf(call, this.getPosition())
+      )
+    }
+  }
+
   /** A callable tagged with a relevant return kind. */
   class ReturnPosition extends TReturnPosition0 {
     private DataFlowCallable c;
-    private ReturnKind kind;
+    private ReturnKindExt kind;
 
     ReturnPosition() { this = TReturnPosition0(c, kind) }
 
@@ -747,20 +817,20 @@ private module ImplCommon {
     DataFlowCallable getCallable() { result = c }
 
     /** Gets the return kind. */
-    ReturnKind getKind() { result = kind }
+    ReturnKindExt getKind() { result = kind }
 
     /** Gets a textual representation of this return position. */
     string toString() { result = "[" + kind + "] " + c }
   }
 
   pragma[noinline]
-  DataFlowCallable returnNodeGetEnclosingCallable(ReturnNode ret) {
+  DataFlowCallable returnNodeGetEnclosingCallable(ReturnNodeExt ret) {
     result = ret.getEnclosingCallable()
   }
 
   pragma[noinline]
-  ReturnPosition getReturnPosition(ReturnNode ret) {
-    exists(DataFlowCallable c, ReturnKind k | returnPosition(ret, c, k) |
+  ReturnPosition getReturnPosition(ReturnNodeExt ret) {
+    exists(DataFlowCallable c, ReturnKindExt k | returnPosition(ret, c, k) |
       result = TReturnPosition0(c, k)
     )
   }
@@ -790,4 +860,10 @@ private module ImplCommon {
     or
     result = viableCallable(call) and cc instanceof CallContextReturn
   }
+
+  pragma[noinline]
+  DataFlowType getErasedNodeType(Node n) { result = getErasedRepr(n.getType()) }
+
+  pragma[noinline]
+  DataFlowType getErasedNodeTypeBound(Node n) { result = getErasedRepr(n.getTypeBound()) }
 }
