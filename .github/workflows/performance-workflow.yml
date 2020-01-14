@@ -1,0 +1,11 @@
+name: Performance Test
+on: pull_request
+  branches:
+  - dbartol/perf
+runs-on:
+- windows-latest
+jobs:
+  new:
+    name: Measure performance of new code
+      steps:
+      - uses: actions/checkout@v1
