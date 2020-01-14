@@ -1,7 +1,7 @@
 name: Performance Test
 on: pull_request
   branches:
-  - dbartol/perf
+  - 'dbartol/perf'
 runs-on:
 - windows-latest
 jobs:
