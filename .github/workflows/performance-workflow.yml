@@ -9,4 +9,12 @@ jobs:
     runs-on:
     - windows-latest
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout QL
+      uses: actions/checkout@v1
+    - name: Download CodeQL CLI
+      uses: Legion2/download-release-action@v2.1.0
+      with:
+        repository: github/codeql-cli-binaries
+        tag: v2.0.1
+        path: cli
+        file: codeql.zip
