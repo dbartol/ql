@@ -27,7 +27,7 @@ jobs:
       run: Expand-Archive -Path codeql.zip -DestinationPath codeql-cli
     - name: Download Database
       shell: pwsh
-      run: Invoke-WebRequest -Uri 'https://storage.googleapis.com/semmle-oss-live-artifact-store/QUERY_SNAPSHOT/1511079091702?GoogleAccessId=semmle-oss-live%40appspot.gserviceaccount.com&Expires=1579052574&Signature=jV7XWgtpvHEkJBXsD7bQPwyehmgKCcxBPaoEq%2F1G4sDLekdo7zaPlrEgW2saptRKt6FjPnYpWuxB45vp9OumX1NP4%2Fmmhkrn9lvhsThNM03alcRaTiSB57s1Q%2FvRaHPi792AOg9iQwl0Te653qeHyO%2B0v1JMuOXld4kUV%2BzpUBJHlIQHtTIMcGEMr6LR%2FArYt47Ao3ycJmuTIXqPD6wLfbA2JYXjbTqItgWklvqKzhLV7UM9axWvk8cyIsRIHyNtwNq9Z0I40ApoXviRfLNk%2Fl3H%2B8a7qqPFW3XYNBgoh%2Fp5co1dreCcPAlTJvp93SYmGEStjGrZ08X1lB9reXHmwg%3D%3D&response-content-disposition=attachment%3B+filename%3D%22microsoft_ChakraCore_cpp-srcVersion_fc0d2acdf210af13e68681f15d9ae8f6d700451d-dist_odasa-2019-12-06-7053-linux64.zip%22' -OutFile microsoft_ChakraCore.zip
+      run: Invoke-WebRequest -Uri 'https://lgtm.com/api/v1.0/snapshots/2034240708/cpp' -Headers @{ Authorization = 'bearer ${{ secrets.LGTM_SNAPSHOT_DOWNLOAD }}'} -OutFile microsoft_ChakraCore.zip
     - name: Unzip Database
       shell: pwsh
       run: Expand-Archive -Path microsoft_ChakraCore.zip -DestinationPath microsoft_ChakraCore
@@ -35,4 +35,3 @@ jobs:
       shell: pwsh
       run: |
         &'codeql-cli/codeql/codeql.cmd' database analyze database --format sarifv2 --output results.sarif
-
