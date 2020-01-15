@@ -3,10 +3,10 @@ on:
   pull_request:
     branches:
     - 'dbartol/perf'
-runs-on:
-- windows-latest
 jobs:
   new:
     name: Measure performance of new code
+    runs-on:
+    - windows-latest
     steps:
     - uses: actions/checkout@v1
