@@ -6,6 +6,9 @@ on:
 jobs:
   new:
     name: Measure performance of new code
+    strategy:
+      matrix:
+        node_id: [0, 1, 2]
     runs-on:
     - windows-latest
     steps:
