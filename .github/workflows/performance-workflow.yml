@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         node_id: [0, 1, 2]
+      fail-fast: false
     runs-on:
     - windows-latest
     steps:
