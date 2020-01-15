@@ -35,7 +35,7 @@ jobs:
       shell: pwsh
       run: |
         &'codeql-cli/codeql/codeql.cmd' database analyze microsoft_ChakraCore --format sarifv2 --output results.sarif
-        if $LASTEXITCODE -ne 0 {
+        if ($LASTEXITCODE -ne 0) {
           throw "CodeQL command failed with exit code ${LASTEXITCODE}"
         }
     - name: Fail
