@@ -15,7 +15,7 @@ jobs:
     - name: Checkout QL
       uses: actions/checkout@v1
     - name: Environment
-      shell: pwsh
+      shell: powershell
       run: |
         Get-WmiObject win32_logicaldisk
         Get-ChildItem env:
