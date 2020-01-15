@@ -35,7 +35,7 @@ jobs:
       shell: pwsh
       run: |
         $DatabasePath = Get-ChildItem microsoft_ChakraCore
-        &'codeql-cli/codeql/codeql.cmd' database analyze $DatabasePath.FullName --format sarifv2 --output results.sarif
+        &'codeql-cli/codeql/codeql.cmd' database analyze $DatabasePath.FullName cpp/ql/test/library-tests/ir/constant_func/constant_func.ql --format csv --output results.csv --additional-packs cpp/ql/src
         if ($LASTEXITCODE -ne 0) {
           throw "CodeQL command failed with exit code ${LASTEXITCODE}"
         }
