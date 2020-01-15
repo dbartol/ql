@@ -14,6 +14,11 @@ jobs:
     steps:
     - name: Checkout QL
       uses: actions/checkout@v1
+    - name: Environment
+      shell: pwsh
+      run: |
+        Get-WmiObject win32_logicaldisk
+        Get-ChildItem env:
     - name: Cache CodeQL CLI
       id: cache
       uses: actions/cache@v1
