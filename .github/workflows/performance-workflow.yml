@@ -11,10 +11,17 @@ jobs:
     steps:
     - name: Checkout QL
       uses: actions/checkout@v1
-    - name: Download CodeQL CLI
-      uses: Legion2/download-release-action@v2.1.0
+    - name: Cache CodeQL CLI
+      id: cache
+      uses: actions/cache@v1
       with:
-        repository: github/codeql-cli-binaries
-        tag: v2.0.1
-        path: cli
-        file: codeql.zip
+        path: codeql-cli
+        key: codeql-cli-v2.0.1
+    - name: Download CodeQL CLI
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: Invoke-WebRequest -Uri https://github.com/github/codeql-cli-binaries/releases/download/v2.0.1/codeql.zip -OutFile codeql.zip
+    - name: Unzip CodeQL CLI
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: Expand-Archive -Path codeql.zip -DestinationPath codeql-cli
