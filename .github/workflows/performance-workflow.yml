@@ -51,7 +51,7 @@ jobs:
           }
           &'codeql-cli/codeql/codeql.cmd' database analyze $DatabasePath.FullName cpp/ql/test/library-tests/ir/constant_func/constant_func.ql --format csv --output results.csv --additional-packs cpp/ql/src --rerun
           if ($LASTEXITCODE -ne 0) {
-            throw "CodeQL command failed with exit code ${LASTEXITCODE}"
+            Write-Host "CodeQL command failed with exit code ${LASTEXITCODE}"
           }
         }
     - name: Fail
