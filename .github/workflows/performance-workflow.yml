@@ -52,7 +52,7 @@ jobs:
             throw "CodeQL command failed with exit code ${LASTEXITCODE}"
           }
           Write-Host 'Analyzing...'
-          &'codeql-cli/codeql/codeql.cmd' database analyze $DatabasePath.FullName cpp/ql/test/library-tests/ir/constant_func/constant_func.ql --format csv --output results.csv --additional-packs cpp/ql/src --rerun
+          &'codeql-cli/codeql/codeql.cmd' database run-queries $DatabasePath.FullName cpp/ql/test/library-tests/ir/constant_func/constant_func.ql --additional-packs cpp/ql/src
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Fail: ${LASTEXITCODE}"
             Write-Host "CodeQL command failed with exit code ${LASTEXITCODE}"
