@@ -32,6 +32,30 @@ private predicate hasResultMemoryAccess(
   )
 }
 
+/**
+ * Gets a cost metric for the specific `Allocation`. The cost metric is intended to approximate the
+ * expense of computing precise SSA defs and uses for this allocation.
+ * The current cost metric is `uniqueLocationCount * definitionCount`, where `uniqueLocationCount`
+ * is the number of unique `MemoryLocation`s within the allocation, and `definitionCount` is the
+ * number of instructions whose result stores into the allocation.
+ */
+private int getAllocationCostMetric(Allocation var) {
+  exists(int uniqueLocationCount, int definitionCount |
+    uniqueLocationCount =
+      count(IRType type, IntValue startBitOffset, IntValue endBitOffset, boolean isMayAccess |
+        hasResultMemoryAccess(_, var, type, _, startBitOffset, endBitOffset, isMayAccess)
+      ) and
+    definitionCount = count(Instruction instr | hasResultMemoryAccess(instr, var, _, _, _, _, _)) and
+    result = uniqueLocationCount * definitionCount
+  )
+}
+
+/**
+ * Holds if it is too expensive to compute precise SSA use/def information for the specified
+ * `Allocation`.
+ */
+private predicate isExpensiveAllocation(Allocation alloc) { getAllocationCostMetric(alloc) >= 5000 }
+
 private predicate hasOperandMemoryAccess(
   MemoryOperand operand, Allocation var, IRType type, Language::LanguageType languageType,
   IntValue startBitOffset, IntValue endBitOffset, boolean isMayAccess
@@ -55,9 +79,25 @@ private newtype TMemoryLocation =
     IntValue endBitOffset, boolean isMayAccess
   ) {
     (
-      hasResultMemoryAccess(_, var, type, _, startBitOffset, endBitOffset, isMayAccess)
+      // For expensive allocations, always create a location with unknown bounds and type.
+      isExpensiveAllocation(var) and
+      type instanceof IRUnknownType and
+      startBitOffset = Ints::unknown() and
+      endBitOffset = Ints::unknown() and
+      (isMayAccess = true or isMayAccess = false)
       or
-      hasOperandMemoryAccess(_, var, type, _, startBitOffset, endBitOffset, isMayAccess)
+      (
+        hasResultMemoryAccess(_, var, type, _, startBitOffset, endBitOffset, isMayAccess)
+        or
+        hasOperandMemoryAccess(_, var, type, _, startBitOffset, endBitOffset, isMayAccess)
+      ) and
+      (
+        // For expensive allocations, only keep locations that exactly cover the extents of the
+        // allocation.
+        exactlyCoversType(var.getIRType(), startBitOffset, endBitOffset)
+        or
+        not isExpensiveAllocation(var)
+      )
       or
       // For a stack variable, always create a memory location for the entire variable.
       var.isAlwaysAllocatedOnStack() and
@@ -80,6 +120,16 @@ private newtype TMemoryLocation =
   TAllAliasedMemory(IRFunction irFunc, boolean isMayAccess) {
     isMayAccess = false or isMayAccess = true
   }
+
+/**
+ * Holds if the range of bit offsets [`startBitOffset`, `endBitOffset`) exactly covers the
+ * extent of the specified `type`.
+ */
+pragma[inline]
+private predicate exactlyCoversType(IRType type, IntValue startBitOffset, IntValue endBitOffset) {
+  startBitOffset = 0 and
+  endBitOffset = type.getByteSize() * 8
+}
 
 /**
  * Represents the memory location accessed by a memory operand or memory result. In this implementation, the location is
@@ -221,8 +271,7 @@ class VariableMemoryLocation extends TVariableMemoryLocation, AllocationMemoryLo
    * Holds if this memory location covers the entire variable.
    */
   final predicate coversEntireVariable() {
-    startBitOffset = 0 and
-    endBitOffset = var.getIRType().getByteSize() * 8
+    exactlyCoversType(var.getIRType(), startBitOffset, endBitOffset)
   }
 }
 
@@ -535,6 +584,21 @@ private Overlap getVariableMemoryLocationOverlap(
       use.getEndBitOffset())
 }
 
+/**
+ * Holds if an access to `alloc` at the specified range of bit offsets should be modeled as an
+ * access at an unknown offset, rather than an access at the known offset. Modeling the access as
+ * having an unknown offset reduces the number of unique locations for which we have to compute SSA,
+ * but causes the resulting SSA to be less precise.
+ */
+bindingset[startBitOffset, endBitOffset]
+pragma[inline]
+private predicate useFallbackLocation(
+  Allocation alloc, IntValue startBitOffset, IntValue endBitOffset
+) {
+  isExpensiveAllocation(alloc) and
+  not exactlyCoversType(alloc.getIRType(), startBitOffset, endBitOffset)
+}
+
 MemoryLocation getResultMemoryLocation(Instruction instr) {
   exists(MemoryAccessKind kind, boolean isMayAccess |
     kind = instr.getResultMemoryAccess() and
@@ -546,8 +610,14 @@ MemoryLocation getResultMemoryLocation(Instruction instr) {
         then
           exists(Allocation var, IRType type, IntValue startBitOffset, IntValue endBitOffset |
             hasResultMemoryAccess(instr, var, type, _, startBitOffset, endBitOffset, isMayAccess) and
-            result =
-              TVariableMemoryLocation(var, type, _, startBitOffset, endBitOffset, isMayAccess)
+            if useFallbackLocation(var, startBitOffset, endBitOffset)
+            then
+              result =
+                TVariableMemoryLocation(var, any(IRUnknownType t), _, Ints::unknown(),
+                  Ints::unknown(), isMayAccess)
+            else
+              result =
+                TVariableMemoryLocation(var, type, _, startBitOffset, endBitOffset, isMayAccess)
           )
         else result = TUnknownMemoryLocation(instr.getEnclosingIRFunction(), isMayAccess)
       )
@@ -577,8 +647,14 @@ MemoryLocation getOperandMemoryLocation(MemoryOperand operand) {
         then
           exists(Allocation var, IRType type, IntValue startBitOffset, IntValue endBitOffset |
             hasOperandMemoryAccess(operand, var, type, _, startBitOffset, endBitOffset, isMayAccess) and
-            result =
-              TVariableMemoryLocation(var, type, _, startBitOffset, endBitOffset, isMayAccess)
+            if useFallbackLocation(var, startBitOffset, endBitOffset)
+            then
+              result =
+                TVariableMemoryLocation(var, any(IRUnknownType t), _, Ints::unknown(),
+                  Ints::unknown(), isMayAccess)
+            else
+              result =
+                TVariableMemoryLocation(var, type, _, startBitOffset, endBitOffset, isMayAccess)
           )
         else result = TUnknownMemoryLocation(operand.getEnclosingIRFunction(), isMayAccess)
       )
