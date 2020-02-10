@@ -9,7 +9,7 @@ function RunQuery {
 
     $FullQuery = Join-Path $Library $Query
     &$CodeQLPath database cleanup $Database --mode=brutal | ForEach-Object { Write-Host $_ }
-    $Results = &$CodeQLPath database run-queries $Database $FullQuery --ram=8192 --tuple-counting -vvv 2>&1 |
+    $Results = &$CodeQLPath database run-queries $Database $FullQuery --ram=8192 --tuple-counting --verbosity=progress+++ 2>&1 |
         ForEach-Object {
             Write-Host $_
             if ($_ -match 'Evaluation done (\([^\)]+\))') {
@@ -36,6 +36,7 @@ $Databases = @(
 #'C:\src\Snapshots\Perf\zcoinofficial_zcoin_1392762'
 )
 
+$env:SEMMLE_SYNCHRONOUS_LOGGING='true'
 $Results = @()
 foreach ($Database in $Databases) {
     foreach ($Library in @('C:\Src\ql_base\cpp\ql\src', 'C:\Src\ql_4\cpp\ql\src')) {

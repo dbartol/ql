@@ -54,7 +54,7 @@ private int getAllocationCostMetric(Allocation var) {
  * Holds if it is too expensive to compute precise SSA use/def information for the specified
  * `Allocation`.
  */
-private predicate isExpensiveAllocation(Allocation alloc) { getAllocationCostMetric(alloc) >= 5000 }
+predicate isExpensiveAllocation(Allocation alloc) { getAllocationCostMetric(alloc) >= 5000 }
 
 private predicate hasOperandMemoryAccess(
   MemoryOperand operand, Allocation var, IRType type, Language::LanguageType languageType,
