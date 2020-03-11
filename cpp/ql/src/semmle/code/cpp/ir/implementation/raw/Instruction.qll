@@ -15,7 +15,7 @@ private import Imports::OperandTag
  * `File` and line number. Used for assigning register names when printing IR.
  */
 private Instruction getAnInstructionAtLine(IRFunction irFunc, Language::File file, int line) {
-  exists(IRConfiguration config |
+  exists(IRConfiguration::IRConfiguration config |
     config.shouldEvaluateDebugStringsForFunction(irFunc.getFunction())
   ) and
   exists(Language::Location location |
@@ -43,7 +43,7 @@ class Instruction extends Construction::TInstruction {
   }
 
   predicate shouldGenerateDumpStrings() {
-    exists(IRConfiguration config |
+    exists(IRConfiguration::IRConfiguration config |
       config.shouldEvaluateDebugStringsForFunction(this.getEnclosingFunction())
     )
   }
