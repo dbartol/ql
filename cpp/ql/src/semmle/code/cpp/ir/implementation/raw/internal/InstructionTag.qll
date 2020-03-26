@@ -71,6 +71,7 @@ newtype TInstructionTag =
   VarArgsArgLoadTag() or
   VarArgsMoveNextTag() or
   VarArgsVAListStoreTag() or
+  VarArgsCopyTag() or
   AsmTag() or
   AsmInputTag(int elementIndex) { exists(AsmStmt asm | exists(asm.getChild(elementIndex))) }
 
@@ -208,6 +209,8 @@ string getInstructionTagId(TInstructionTag tag) {
   tag = VarArgsMoveNextTag() and result = "VarArgsMoveNext"
   or
   tag = VarArgsVAListStoreTag() and result = "VarArgsVAListStore"
+  or
+  tag = VarArgsCopyTag() and result = "VarArgsCopy"
   or
   tag = AsmTag() and result = "Asm"
   or

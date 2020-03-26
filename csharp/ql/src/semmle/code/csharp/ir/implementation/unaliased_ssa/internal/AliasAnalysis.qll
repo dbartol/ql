@@ -25,6 +25,8 @@ private predicate operandIsConsumedWithoutEscaping(Operand operand) {
       or
       // Converting an address to a `bool` does not escape the address.
       instr.(ConvertInstruction).getResultIRType() instanceof IRBooleanType
+      or
+      instr instanceof VarArgsEndInstruction
     )
   )
   or
@@ -123,6 +125,14 @@ private predicate operandIsPropagated(Operand operand, IntValue bitOffset) {
       or
       // Some functions are known to propagate an argument
       isAlwaysReturnedArgument(operand) and bitOffset = 0
+      or
+      instr instanceof VarArgsStartInstruction and bitOffset = 0
+      or
+      instr instanceof VarArgInstruction and bitOffset = 0
+      or
+      instr instanceof NextVarArgInstruction and bitOffset = Ints::unknown()
+      or
+      instr instanceof VarArgsCopyInstruction and bitOffset = 0
     )
   )
 }

@@ -5,7 +5,8 @@ private import semmle.code.cpp.ir.internal.IntegerConstant as Ints
 private predicate ignoreAllocation(string name) {
   name = "i" or
   name = "p" or
-  name = "q"
+  name = "q" or
+  name = "args"
 }
 
 module Raw {

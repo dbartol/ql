@@ -85,3 +85,14 @@ void PointsTo(
   i = g->b1;  //$raw,ussa=g $ussa=*g[?..?)<int>
   i = g->dvi;  //$raw,ussa=g $ussa=*g[8..12)<int>
 }
+
+void VarArgs(  //$raw,ussa=#ellipsis
+  int i,
+  ...
+) {
+  __builtin_va_list args;
+  __builtin_va_start(args, i);
+  i = __builtin_va_arg(args, int);  //$ussa=#ellipsis[0..4)<int>
+  float p = __builtin_va_arg(args, double);  //$ussa=#ellipsis[?..?)<double>
+  __builtin_va_end(args);
+}

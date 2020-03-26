@@ -71,6 +71,7 @@ private newtype TOpcode =
   TVarArgsEnd() or
   TVarArg() or
   TNextVarArg() or
+  TVarArgsCopy() or
   TCallSideEffect() or
   TCallReadSideEffect() or
   TIndirectReadSideEffect() or
@@ -643,6 +644,10 @@ module Opcode {
 
   class NextVarArg extends UnaryOpcode, TNextVarArg {
     final override string toString() { result = "NextVarArg" }
+  }
+
+  class VarArgsCopy extends UnaryOpcode, TVarArgsCopy {
+    final override string toString() { result = "VarArgsCopy" }
   }
 
   class CallSideEffect extends WriteSideEffectOpcode, EscapedWriteOpcode, MayWriteOpcode,

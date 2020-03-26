@@ -1348,3 +1348,45 @@ class BuiltInInstruction extends BuiltInOperationInstruction {
 
   final override string getImmediateString() { result = getBuiltInOperation().toString() }
 }
+
+/**
+ * An instruction representing the C `va_start` macro. The operand is the address of the variable
+ * that represents the ellipsis.
+ */
+class VarArgsStartInstruction extends UnaryInstruction {
+  VarArgsStartInstruction() { getOpcode() instanceof Opcode::VarArgsStart }
+}
+
+/**
+ * An instruction representing the access of a varargs argument via the C `va_arg` macro. The
+ * operand is the `va_list`, and the result is the address of the argument. There will be a
+ * subsequent `Load` instruction to load the argument value from that address.
+ */
+class VarArgInstruction extends UnaryInstruction {
+  VarArgInstruction() { getOpcode() instanceof Opcode::VarArg }
+}
+
+/**
+ * An instruction representing the update of a `va_list` to point to the next varargs argument as
+ * part of the C `va_arg` macro. The operand is the original `va_list`, and the result is the
+ * updated `va_list`.
+ */
+class NextVarArgInstruction extends UnaryInstruction {
+  NextVarArgInstruction() { getOpcode() instanceof Opcode::NextVarArg }
+}
+
+/**
+ * An instruction representing the C `va_end` macro. The operand is the address of the `va_list`.
+ * There is no result.
+ */
+class VarArgsEndInstruction extends UnaryInstruction {
+  VarArgsEndInstruction() { getOpcode() instanceof Opcode::VarArgsEnd }
+}
+
+/**
+ * An instruction representing the C `va_copy` macro. The operand is the source `va_list`, and the
+ * result is a copy of that `va_list`.
+ */
+class VarArgsCopyInstruction extends UnaryInstruction {
+  VarArgsCopyInstruction() { getOpcode() instanceof Opcode::VarArgsCopy }
+}

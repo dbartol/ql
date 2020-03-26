@@ -113,6 +113,10 @@ private predicate ignoreExprOnly(Expr expr) {
   exists(DeleteExpr deleteExpr | deleteExpr.getDestructorCall() = expr)
   or
   exists(DeleteArrayExpr deleteArrayExpr | deleteArrayExpr.getDestructorCall() = expr)
+  or
+  // Ignore the array-to-pointer conversion of a `va_list`, because we want to access it as the
+  // underlying array type in order to match the declared type of the variable.
+  exists(VarArgsExpr varArgsExpr | expr.(Conversion) = varArgsExpr.getAChild().getFullyConverted())
 }
 
 /**
@@ -214,6 +218,23 @@ private predicate usedAsCondition(Expr expr) {
 }
 
 /**
+ * Holds if the expression `expr` is one of the `va_list` operands to a `va_*` macro.
+ */
+predicate isVAListExpr(Expr expr) {
+  exists(VarArgsExpr parent |
+    expr = parent.(BuiltInVarArgsStart).getVAList()
+    or
+    expr = parent.(BuiltInVarArgsEnd).getVAList()
+    or
+    expr = parent.(BuiltInVarArg).getVAList()
+    or
+    expr = parent.(BuiltInVarArgCopy).getSourceVAList()
+    or
+    expr = parent.(BuiltInVarArgCopy).getDestinationVAList()
+  )
+}
+
+/**
  * Holds if `expr` has an lvalue-to-rvalue conversion that should be ignored
  * when generating IR. This occurs for conversion from an lvalue of function type
  * to an rvalue of function pointer type. The conversion is represented in the
@@ -223,12 +244,21 @@ private predicate usedAsCondition(Expr expr) {
 private predicate ignoreLoad(Expr expr) {
   expr.hasLValueToRValueConversion() and
   (
-    expr instanceof ThisExpr or
-    expr instanceof FunctionAccess or
+    expr instanceof ThisExpr
+    or
+    expr instanceof FunctionAccess
+    or
     expr.(PointerDereferenceExpr).getOperand().getFullyConverted().getType().getUnspecifiedType()
-      instanceof FunctionPointerType or
+      instanceof FunctionPointerType
+    or
     expr.(ReferenceDereferenceExpr).getExpr().getType().getUnspecifiedType() instanceof
       FunctionReferenceType
+    or
+    // Ignore a load on the `va_list` argument to a `va_*` macro. In the Unix ABI, when a `va_list`
+    // is used as a parameter, any use of that parameter will be a prvalue of type `__va_list_tag*`.
+    // We want to treat those as lvalues, because we treat the pointer itself as being the
+    // `va_list`, rather than the `__va_list_tag`.
+    isVAListExpr(expr)
   )
 }
 

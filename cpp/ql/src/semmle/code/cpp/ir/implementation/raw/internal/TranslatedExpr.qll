@@ -2080,51 +2080,32 @@ class TranslatedBuiltInOperation extends TranslatedNonConstantExpr {
 }
 
 /**
- * Holds if the expression `expr` is one of the `va_list` operands to a `va_*` macro.
- */
-private predicate isVAListExpr(Expr expr) {
-  exists(VarArgsExpr parent, Expr originalExpr |
-    (
-      originalExpr = parent.(BuiltInVarArgsStart).getVAList()
-      or
-      originalExpr = parent.(BuiltInVarArgsEnd).getVAList()
-      or
-      originalExpr = parent.(BuiltInVarArg).getVAList()
-      or
-      originalExpr = parent.(BuiltInVarArgCopy).getSourceVAList()
-      or
-      originalExpr = parent.(BuiltInVarArgCopy).getDestinationVAList()
-    ) and
-    expr = originalExpr.getFullyConverted()
-  )
-}
-
-/**
  * Gets the type of the `va_list` being accessed by `expr`, where `expr` is a `va_list` operand of a
  * `va_*` macro.
  *
  * In the Unix ABI, `va_list` is declared as `typedef struct __va_list_tag va_list[1];`. When used
  * as the type of a local variable, this gets an implicit array-to-pointer conversion, so that the
- * actual argument to the `va_*` macro is a prvalue of type `__va_list_tag*`. When used as the type
- * of a function parameter, the parameter's type decays to `__va_list_tag*`, so that the argument
- * to the `va_*` macro is still a prvalue of type `__va_list_tag*`, with no implicit conversion
- * necessary. In either case, we treat `__va_list_tag` as the representative type of the `va_list`.
+ * actual argument to the `va_*` macro is a prvalue of type `__va_list_tag*`. We skip that
+ * conversion, because we want to use the original array type as the type of the `va_list`. This
+ * ensures that we are always accessing the `va_list` variable as its declared type, which allows us
+ * to model it in unaliased SSA.
+ *
+ * When used as the type of a function parameter, the parameter's type decays to `__va_list_tag*`,
+ * so that the argument to the `va_*` macro is still a prvalue of type `__va_list_tag*`, with no
+ * implicit conversion necessary. To avoid having to track that additional level of indirection,
+ * we'll actually treat that pointer type as the representation type of the `va_list`, rather than
+ * tracking the `__va_list_tag` itself. To do this, we treat the prvalue as an lvalue.
  *
  * In the Windows ABI, `va_list` is declared as a pointer type (usually `char*`). Whether used as
  * the type of a local variable or of a parameter, this means that the argument to the `va_*` macro
  * is always an _lvalue_ of type `char*`. We treat `char*` as the representative type of the
  * `va_list`.
  */
+pragma[inline]
 private Type getVAListType(Expr expr) {
-  isVAListExpr(expr) and
-  if expr.isPRValueCategory()
-  then
-    // In the Unix ABI, this will be a prvalue of type `__va_list_tag*`. We want the `__va_list_tag`
-    // type.
-    result = expr.getType().getUnderlyingType().(PointerType).getBaseType()
-  else
-    // In the Windows ABI, this will be an lvalue of some pointer type. We want that pointer type.
-    result = expr.getType()
+  // In any of the cases outlined above, we still just want the type that is already present on the
+  // expression. This predicate really exists as a single place to attach a big comment.
+  result = expr.getType()
 }
 
 /**
@@ -2140,11 +2121,11 @@ class TranslatedVarArgsStart extends TranslatedNonConstantExpr {
     or
     tag = VarArgsStartTag() and
     opcode instanceof Opcode::VarArgsStart and
-    resultType = getTypeForPRValue(getVAListType(expr.getVAList().getFullyConverted()))
+    resultType = getTypeForPRValue(getVAListType(expr.getVAList()))
     or
     tag = VarArgsVAListStoreTag() and
     opcode instanceof Opcode::Store and
-    resultType = getTypeForPRValue(getVAListType(expr.getVAList().getFullyConverted()))
+    resultType = getTypeForPRValue(getVAListType(expr.getVAList()))
   }
 
   final override Instruction getFirstInstruction() {
@@ -2155,9 +2136,7 @@ class TranslatedVarArgsStart extends TranslatedNonConstantExpr {
 
   final override TranslatedElement getChild(int id) { id = 0 and result = getVAList() }
 
-  private TranslatedExpr getVAList() {
-    result = getTranslatedExpr(expr.getVAList().getFullyConverted())
-  }
+  private TranslatedExpr getVAList() { result = getTranslatedExpr(expr.getVAList()) }
 
   final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
     tag = VarArgsStartEllipsisAddressTag() and
@@ -2206,7 +2185,7 @@ class TranslatedVarArg extends TranslatedNonConstantExpr {
   final override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
     tag = VarArgsVAListLoadTag() and
     opcode instanceof Opcode::Load and
-    resultType = getTypeForPRValue(getVAListType(expr.getVAList().getFullyConverted()))
+    resultType = getTypeForPRValue(getVAListType(expr.getVAList()))
     or
     tag = VarArgsArgAddressTag() and
     opcode instanceof Opcode::VarArg and
@@ -2214,11 +2193,11 @@ class TranslatedVarArg extends TranslatedNonConstantExpr {
     or
     tag = VarArgsMoveNextTag() and
     opcode instanceof Opcode::NextVarArg and
-    resultType = getTypeForPRValue(getVAListType(expr.getVAList().getFullyConverted()))
+    resultType = getTypeForPRValue(getVAListType(expr.getVAList()))
     or
     tag = VarArgsVAListStoreTag() and
     opcode instanceof Opcode::Store and
-    resultType = getTypeForPRValue(getVAListType(expr.getVAList().getFullyConverted()))
+    resultType = getTypeForPRValue(getVAListType(expr.getVAList()))
   }
 
   final override Instruction getFirstInstruction() { result = getVAList().getFirstInstruction() }
@@ -2227,9 +2206,7 @@ class TranslatedVarArg extends TranslatedNonConstantExpr {
 
   final override TranslatedElement getChild(int id) { id = 0 and result = getVAList() }
 
-  private TranslatedExpr getVAList() {
-    result = getTranslatedExpr(expr.getVAList().getFullyConverted())
-  }
+  private TranslatedExpr getVAList() { result = getTranslatedExpr(expr.getVAList()) }
 
   final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
     tag = VarArgsVAListLoadTag() and
@@ -2299,9 +2276,7 @@ class TranslatedVarArgsEnd extends TranslatedNonConstantExpr {
 
   final override TranslatedElement getChild(int id) { id = 0 and result = getVAList() }
 
-  private TranslatedExpr getVAList() {
-    result = getTranslatedExpr(expr.getVAList().getFullyConverted())
-  }
+  private TranslatedExpr getVAList() { result = getTranslatedExpr(expr.getVAList()) }
 
   final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
     tag = OnlyInstructionTag() and
@@ -2330,11 +2305,15 @@ class TranslatedVarArgCopy extends TranslatedNonConstantExpr {
   final override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
     tag = VarArgsVAListLoadTag() and
     opcode instanceof Opcode::Load and
-    resultType = getTypeForPRValue(getVAListType(expr.getSourceVAList().getFullyConverted()))
+    resultType = getTypeForPRValue(getVAListType(expr.getSourceVAList()))
+    or
+    tag = VarArgsCopyTag() and
+    opcode instanceof Opcode::VarArgsCopy and
+    resultType = getTypeForPRValue(getVAListType(expr.getDestinationVAList()))
     or
     tag = VarArgsVAListStoreTag() and
     opcode instanceof Opcode::Store and
-    resultType = getTypeForPRValue(getVAListType(expr.getDestinationVAList().getFullyConverted()))
+    resultType = getTypeForPRValue(getVAListType(expr.getDestinationVAList()))
   }
 
   final override Instruction getFirstInstruction() {
@@ -2350,15 +2329,17 @@ class TranslatedVarArgCopy extends TranslatedNonConstantExpr {
   }
 
   private TranslatedExpr getDestinationVAList() {
-    result = getTranslatedExpr(expr.getDestinationVAList().getFullyConverted())
+    result = getTranslatedExpr(expr.getDestinationVAList())
   }
 
-  private TranslatedExpr getSourceVAList() {
-    result = getTranslatedExpr(expr.getSourceVAList().getFullyConverted())
-  }
+  private TranslatedExpr getSourceVAList() { result = getTranslatedExpr(expr.getSourceVAList()) }
 
   final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
     tag = VarArgsVAListLoadTag() and
+    kind instanceof GotoEdge and
+    result = getInstruction(VarArgsCopyTag())
+    or
+    tag = VarArgsCopyTag() and
     kind instanceof GotoEdge and
     result = getDestinationVAList().getFirstInstruction()
     or
@@ -2385,11 +2366,15 @@ class TranslatedVarArgCopy extends TranslatedNonConstantExpr {
       result = getEnclosingFunction().getUnmodeledDefinitionInstruction()
     )
     or
+    tag = VarArgsCopyTag() and
+    operandTag instanceof UnaryOperandTag and
+    result = getInstruction(VarArgsVAListLoadTag())
+    or
     tag = VarArgsVAListStoreTag() and
     (
       operandTag instanceof AddressOperandTag and result = getDestinationVAList().getResult()
       or
-      operandTag instanceof StoreValueOperandTag and result = getInstruction(VarArgsVAListLoadTag())
+      operandTag instanceof StoreValueOperandTag and result = getInstruction(VarArgsCopyTag())
     )
   }
 }
