@@ -1286,4 +1286,23 @@ void test_static_member_functions(int int_arg, A* a_arg) {
     getAnInstanceOfA()->static_member_without_def();
 }
 
+Point initListAsExpr(int a, int b) {
+    Point p;
+    p = { a, b };
+
+    return { a, b };
+}
+
+struct StringPair {
+    String x;
+    String y;
+};
+
+StringPair initListAsExprWithConstructors(const String& a, const String& b) {
+    StringPair p;
+    p = { a, b };
+
+    return { a, b };
+}
+
 // semmle-extractor-options: -std=c++17 --clang
