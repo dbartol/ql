@@ -194,10 +194,9 @@ private module Cached {
           not instruction instanceof UnmodeledUseInstruction and
           if exists(Alias::getOperandMemoryLocation(oldOperand))
           then hasMemoryOperandDefinition(oldInstruction, oldOperand, overlap, result)
-          else (
+          else
             // Reuse the definition that was already computed by the previous iteration of SSA.
             result = getNewDefinitionFromOldSSA(oldOperand, overlap)
-          )
         )
         or
         // Connect any definitions that are not being modeled in SSA to the
