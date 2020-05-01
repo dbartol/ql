@@ -164,3 +164,36 @@ int g19(int x)
 
 	return x; // GOOD
 }
+
+[[noreturn]]
+void noReturnFunction();
+
+template<typename T>
+[[noreturn]]
+void noReturnFunctionTemplate();
+
+int g20(int x)
+{
+	if (x > 0)
+	{
+		return x;
+	}
+	else
+	{
+		noReturnFunctionTemplate<float>();  // GOOD
+	}
+}
+
+template<typename T>
+[[noreturn]]
+void noReturnFunctionTemplate()
+{
+	throw "Error!";
+}
+
+/*
+[[noreturn]]
+void noReturnFunction() {
+	throw "Error!";
+}
+*/
