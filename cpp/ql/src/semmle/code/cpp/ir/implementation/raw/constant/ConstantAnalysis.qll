@@ -14,25 +14,24 @@ int getConstantValue(Instruction instr) {
   or
   exists(PhiInstruction phi |
     phi = instr and
-    result = max(Operand op | op = phi.getAnInputOperand() | getConstantValue(op.getDef())) and
-    result = min(Operand op | op = phi.getAnInputOperand() | getConstantValue(op.getDef()))
+    result = unique(Operand op | op = phi.getAnInputOperand() | getConstantValue(op.getDef()))
   )
 }
 
 pragma[noinline]
-private predicate binaryInstructionOperands(BinaryInstruction instr, int left, int right) {
+predicate binaryInstructionOperands(BinaryInstruction instr, int left, int right) {
   left = getConstantValue(instr.getLeft()) and
   right = getConstantValue(instr.getRight())
 }
 
 pragma[noinline]
-private int getBinaryInstructionValue(BinaryInstruction instr) {
+int getBinaryInstructionValue(BinaryInstruction instr) {
   exists(int left, int right |
     binaryInstructionOperands(instr, left, right) and
     (
       instr instanceof AddInstruction and result = add(left, right)
       or
-      instr instanceof SubInstruction and result = sub(left, right)
+      instr instanceof SubInstruction and result = add(left, right)
       or
       instr instanceof MulInstruction and result = mul(left, right)
       or

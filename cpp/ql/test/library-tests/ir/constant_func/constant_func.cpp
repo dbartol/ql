@@ -68,3 +68,8 @@ int DoWhileFalse() {
   return i;
 }
 
+int ReturnDifference() {
+  int x = 5;
+  int y = 7;
+  return x - y;
+}
