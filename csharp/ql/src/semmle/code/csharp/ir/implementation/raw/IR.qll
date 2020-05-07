@@ -7,6 +7,7 @@ private import internal.IRImports as Imports
 import Imports::EdgeKind
 import Imports::IRType
 import Imports::MemoryAccessKind
+import Imports::Overlap
 
 private newtype TIRPropertyProvider = MkIRPropertyProvider()
 

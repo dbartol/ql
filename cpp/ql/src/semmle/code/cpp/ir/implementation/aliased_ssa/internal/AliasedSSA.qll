@@ -1,5 +1,4 @@
 import AliasAnalysis
-import semmle.code.cpp.ir.internal.Overlap
 private import semmle.code.cpp.ir.internal.IRCppLanguage as Language
 private import semmle.code.cpp.Print
 private import semmle.code.cpp.ir.implementation.unaliased_ssa.IR

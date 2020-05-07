@@ -1,0 +1,4 @@
+packages:
+- shared/ql/src
+- cpp/ql/src
+- csharp/ql/src

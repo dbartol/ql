@@ -5,6 +5,9 @@
 # query compilation caches
 .cache
 
+__pycache__
+.mypy_cache
+
 # qltest projects and artifacts
 */ql/test/**/*.testproj
 */ql/test/**/*.actual

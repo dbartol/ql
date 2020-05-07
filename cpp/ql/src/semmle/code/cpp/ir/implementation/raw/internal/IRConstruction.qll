@@ -2,7 +2,6 @@ private import cpp
 import semmle.code.cpp.ir.implementation.raw.IR
 private import semmle.code.cpp.ir.implementation.internal.OperandTag
 private import semmle.code.cpp.ir.internal.CppType
-private import semmle.code.cpp.ir.internal.Overlap
 private import semmle.code.cpp.ir.internal.TempVariableTag
 private import InstructionTag
 private import TranslatedCondition

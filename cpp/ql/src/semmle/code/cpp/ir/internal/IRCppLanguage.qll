@@ -4,6 +4,7 @@ private import IRUtilities
 private import semmle.code.cpp.ir.implementation.IRType
 private import semmle.code.cpp.ir.implementation.raw.internal.IRConstruction as IRConstruction
 import CppType
+import TempVariableTag
 
 class LanguageType = CppType;
 

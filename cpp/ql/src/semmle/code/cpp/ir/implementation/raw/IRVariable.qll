@@ -3,7 +3,6 @@ import IRFunction
 private import internal.IRVariableImports as Imports
 import Imports::TempVariableTag
 private import Imports::IRUtilities
-private import Imports::TTempVariableTag
 private import Imports::TIRVariable
 private import Imports::IRType
 
@@ -196,7 +195,7 @@ class IRTempVariable extends IRGeneratedVariable, IRAutomaticVariable, TIRTempVa
  * A temporary variable generated to hold the return value of a function.
  */
 class IRReturnVariable extends IRTempVariable {
-  IRReturnVariable() { tag = ReturnValueTempVar() }
+  IRReturnVariable() { tag = Language::ReturnValueTempVar() }
 
   final override string toString() { result = "#return" }
 }
@@ -205,7 +204,7 @@ class IRReturnVariable extends IRTempVariable {
  * A temporary variable generated to hold the exception thrown by a `ThrowValue` instruction.
  */
 class IRThrowVariable extends IRTempVariable {
-  IRThrowVariable() { tag = ThrowTempVar() }
+  IRThrowVariable() { tag = Language::ThrowTempVar() }
 
   override string getBaseString() { result = "#throw" }
 }

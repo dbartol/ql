@@ -4,7 +4,8 @@
  * Either or both of `start` and `end` may have an unknown value.
  */
 
-import Overlap
+private import IntegerIntervalImports as Imports
+import Imports::Overlap
 private import IntegerConstant
 
 /**

@@ -1,0 +1,46 @@
+{
+    "packages": {
+        "ql-shared": {
+            "directory": "shared/ql/src",
+            "groups": [
+                {
+                    "directory": "ir",
+                    "templates": [
+                        "Instruction.qll"
+                    ],
+                    "instantiations": {
+                        "@semmle/ql-cpp": [
+                            {
+                                "directory": "instantiations/ir/raw",
+                                "args": [
+                                    "semmle.code.cpp.internal.IRCppLanguage",
+                                    "semmle.code.cpp.ir.internal.raw.internal.IRConstruction"
+                                ]
+                            },
+                            {
+                                "args": [
+                                    "semmle.code.cpp.internal.IRCppLanguage",
+                                    "semmle.code.cpp.ir.internal.unaliased_ssa.internal.SSAConstruction"
+                                ],
+                                "directory": "instantiations/ir/unaliased_ssa"
+                            },
+                            {
+                                "args": [
+                                    "semmle.code.cpp.internal.IRCppLanguage",
+                                    "semmle.code.cpp.ir.internal.aliased_ssa.internal.SSAConstruction"
+                                ],
+                                "directory": "instantiations/ir/aliased_ssa"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "ql-cpp": {
+            "directory": "cpp/ql/src"
+        },
+        "ql-csharp": {
+            "directory": "csharp/ql/src"
+        }
+    }
+}
