@@ -1,5 +1,11 @@
 name: codeql-cpp
-version: 0.0.0
+version: 0.0.1
+description: The standard CodeQL library for C and C++ analysis.
+license: MIT
+repository:
+  type: git
+  url: https://github.com/github/codeql.git
+  directory: cpp/ql/src
 dbscheme: semmlecode.cpp.dbscheme
 suites: codeql-suites
 extractor: cpp
